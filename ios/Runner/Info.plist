@@ -45,5 +45,28 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Microphone permission for speech-to-text -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to record your grievance and complaints</string>
+	<!-- Speech recognition permission for converting voice to text -->
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app needs speech recognition access to convert your voice complaint into text</string>
+	<!-- Camera permission for document capture -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to capture your government documents (Aadhar, Ration Card, etc.)</string>
+	<!-- Location permission for finding nearest office -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs your location to find the nearest grievance redressal office</string>
+	<!-- Photo library permission for image picker -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photos to upload government documents</string>
+	<!-- Background audio for text-to-speech -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
+	<!-- Google Maps API Key - Replace with your actual API key -->
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 </dict>
 </plist>
