@@ -91,6 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   await viewModel.startRecording(
                     languageCode: _currentLanguage,
                     userId: 'current_user',
+                    city:
+                        'Delhi', // TODO: Get from user preferences or location
                   );
                 },
                 child: AnimatedContainer(

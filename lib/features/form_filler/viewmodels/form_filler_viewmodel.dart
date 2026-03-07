@@ -1,22 +1,31 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:civic_ai_app/core/services/form_processing_service.dart';
+import 'package:civic_ai_app/models/form_extract_models.dart';
 
 class FormFillerViewModel extends ChangeNotifier {
   final ImagePicker _imagePicker = ImagePicker();
+  final FormProcessingService _formService;
 
   String? _aadharPath;
   String? _ratioCardPath;
   String? _otherDocPath;
   bool _isProcessing = false;
-  String? _extractedData;
+  FormExtractResponse? _extractedData;
+  ImageValidationResponse? _validationResult;
   String? _errorMessage;
 
   String? get aadharPath => _aadharPath;
   String? get ratioCardPath => _ratioCardPath;
   String? get otherDocPath => _otherDocPath;
   bool get isProcessing => _isProcessing;
-  String? get extractedData => _extractedData;
+  FormExtractResponse? get extractedData => _extractedData;
+  ImageValidationResponse? get validationResult => _validationResult;
   String? get errorMessage => _errorMessage;
+
+  FormFillerViewModel({FormProcessingService? formService})
+    : _formService = formService ?? FormProcessingService();
 
   Future<void> captureDocument({required String documentType}) async {
     try {
@@ -42,8 +51,11 @@ class FormFillerViewModel extends ChangeNotifier {
             break;
         }
 
-        // Process image with Vision AI
-        await _processImageWithVision(image.path, documentType);
+        // Validate and process image
+        await validateDocumentQuality(image.path);
+        if (_validationResult?.isValid == true) {
+          await _processImageWithVision(image.path, documentType);
+        }
       }
 
       _isProcessing = false;
@@ -60,21 +72,13 @@ class FormFillerViewModel extends ChangeNotifier {
     String documentType,
   ) async {
     try {
-      // Mock Vision API processing
-      // In production, integrate with Claude 3.5 Sonnet or Gemini Pro Vision
-      await Future.delayed(const Duration(seconds: 2));
+      final imageFile = File(imagePath);
+      _extractedData = await _formService.extractForm(imageFile);
 
-      _extractedData =
-          '''
-Document Type: ${documentType.toUpperCase()}
-Extracted Fields:
-- Name: John Doe
-- Date of Birth: 15-05-1985
-- Address: 123 Village Road, State, District
-- Document Number: XXXX-XXXX-XXXX-1234
-- Issue Date: 01-01-2020
-- Validity: 31-12-2025
-''';
+      if (_extractedData!.errorMessage != null) {
+        _errorMessage = _extractedData!.errorMessage;
+      }
+
       notifyListeners();
     } catch (e) {
       _errorMessage = 'Failed to process image: $e';
@@ -84,30 +88,34 @@ Extracted Fields:
 
   Future<void> validateDocumentQuality(String imagePath) async {
     try {
-      // Mock quality check using TensorFlow Lite edge model
-      // In production, use tflite_flutter for on-device ML
-      await Future.delayed(const Duration(seconds: 1));
+      final imageFile = File(imagePath);
+      _validationResult = await _formService.validateImage(imageFile);
 
-      // Return quality metrics
-      final qualityScore = 0.92; // Mock score out of 1.0
-      if (qualityScore < 0.75) {
+      if (!_validationResult!.isValid) {
         _errorMessage =
-            'Document quality is poor (blur/glare detected). Please retake the photo.';
-      } else {
-        _extractedData =
-            'Document quality check passed. Score: ${(qualityScore * 100).toStringAsFixed(0)}%';
+            'Document quality is poor: ${_validationResult!.issues.join(", ")}. Please retake the photo.';
+      } else if (_validationResult!.quality < 0.75) {
+        _errorMessage =
+            'Document quality is low (${(_validationResult!.quality * 100).toStringAsFixed(0)}%). Please retake with better lighting.';
       }
+
       notifyListeners();
     } catch (e) {
       _errorMessage = 'Quality check failed: $e';
+      _validationResult = null;
       notifyListeners();
     }
   }
 
   Future<String> generateFilledPDF() async {
     try {
-      // Generate PDF with extracted data
-      await Future.delayed(const Duration(seconds: 2));
+      if (_extractedData == null) {
+        _errorMessage = 'No extracted data to generate PDF';
+        return '';
+      }
+
+      // In production, implement actual PDF generation with extracted data
+      await Future.delayed(const Duration(seconds: 1));
       return 'filled_form_${DateTime.now().millisecondsSinceEpoch}.pdf';
     } catch (e) {
       _errorMessage = 'Failed to generate form: $e';
@@ -126,6 +134,7 @@ Extracted Fields:
     _otherDocPath = null;
     _isProcessing = false;
     _extractedData = null;
+    _validationResult = null;
     _errorMessage = null;
     notifyListeners();
   }

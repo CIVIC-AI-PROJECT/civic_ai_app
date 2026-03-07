@@ -160,9 +160,107 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Text(
-                                  viewModel.extractedData!,
-                                  style: const TextStyle(height: 1.5),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Form Type: ${viewModel.extractedData!.formType}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Confidence: ${(viewModel.extractedData!.confidence * 100).toStringAsFixed(1)}%',
+                                      style: TextStyle(
+                                        color:
+                                            viewModel
+                                                    .extractedData!
+                                                    .confidence >
+                                                0.75
+                                            ? Colors.green
+                                            : Colors.orange,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const Divider(height: 24),
+                                    const Text(
+                                      'Extracted Fields:',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...viewModel
+                                        .extractedData!
+                                        .extractedFields
+                                        .entries
+                                        .map((entry) {
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 8,
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  '${entry.key}: ',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: Text(
+                                                    entry.value.toString(),
+                                                    style: const TextStyle(
+                                                      height: 1.5,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        })
+                                        .toList(),
+                                    if (viewModel
+                                        .extractedData!
+                                        .missingFields
+                                        .isNotEmpty) ...[
+                                      const Divider(height: 24),
+                                      const Text(
+                                        'Missing Fields:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                          color: Colors.orange,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      ...viewModel.extractedData!.missingFields
+                                          .map((field) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 4,
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.warning,
+                                                    size: 16,
+                                                    color: Colors.orange,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(field),
+                                                ],
+                                              ),
+                                            );
+                                          })
+                                          .toList(),
+                                    ],
+                                  ],
                                 ),
                               ),
                             ],

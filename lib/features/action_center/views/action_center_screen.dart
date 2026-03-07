@@ -18,11 +18,21 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final voiceChatVM = context.read<VoiceChatViewModel>();
+      final actionCenterVM = context.read<ActionCenterViewModel>();
+
       if (voiceChatVM.currentGrievance != null) {
-        context.read<ActionCenterViewModel>().setGrievance(
-          voiceChatVM.currentGrievance!,
-        );
-        context.read<ActionCenterViewModel>().getCurrentLocation();
+        actionCenterVM.setGrievance(voiceChatVM.currentGrievance!);
+
+        // If we have assist response from voice chat, use it
+        if (voiceChatVM.assistResponse != null) {
+          actionCenterVM.setAssistResponse(voiceChatVM.assistResponse!);
+        } else {
+          // Otherwise fetch office recommendations
+          actionCenterVM.findNearestOffice(
+            problem: voiceChatVM.currentGrievance!.description,
+            city: 'Delhi', // TODO: Get from user preferences or location
+          );
+        }
       }
     });
   }
@@ -298,7 +308,7 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                   child: CircularProgressIndicator(),
                 ),
               )
-            else if (viewModel.nearestOffice != null)
+            else if (viewModel.recommendedOffice != null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -312,28 +322,42 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          viewModel.nearestOffice!.name,
+                          viewModel.recommendedOffice!.name,
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         _buildOfficeInfoRow(
-                          Icons.person,
-                          'Officer',
-                          viewModel.nearestOffice!.officerName,
+                          Icons.place,
+                          'Address',
+                          viewModel.recommendedOffice!.address,
                         ),
                         const SizedBox(height: 8),
                         _buildOfficeInfoRow(
-                          Icons.place,
-                          'Address',
-                          viewModel.nearestOffice!.address,
+                          Icons.directions,
+                          'Distance',
+                          '${viewModel.recommendedOffice!.distanceKm.toStringAsFixed(2)} km',
                         ),
                         const SizedBox(height: 8),
                         _buildOfficeInfoRow(
                           Icons.schedule,
                           'Hours',
-                          viewModel.nearestOffice!.hoursOfOperation ??
-                              'Not available',
+                          viewModel.recommendedOffice!.hours,
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            viewModel.recommendedOffice!.explanation,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -369,7 +393,7 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            // Open map
+                            viewModel.openMaps();
                           },
                           icon: const Icon(Icons.map, size: 22),
                           label: const Text(
@@ -398,7 +422,13 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      viewModel.getCurrentLocation();
+                      if (viewModel.grievance != null) {
+                        viewModel.findNearestOffice(
+                          problem: viewModel.grievance!.description,
+                          city:
+                              'Delhi', // TODO: Get from user preferences or location
+                        );
+                      }
                     },
                     icon: const Icon(Icons.my_location, size: 24),
                     label: const Text(

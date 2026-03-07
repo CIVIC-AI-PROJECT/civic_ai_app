@@ -1,28 +1,39 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:civic_ai_app/models/grievance_model.dart';
+import 'package:civic_ai_app/models/civic_assist_response.dart';
 import 'package:civic_ai_app/core/services/audio_service.dart';
+import 'package:civic_ai_app/core/services/civic_assist_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 
 class VoiceChatViewModel extends ChangeNotifier {
   final AudioService _audioService;
+  final CivicAssistService _civicAssistService;
 
   bool _isRecording = false;
   String _transcribedText = '';
   String? _extractedRight;
   List<String>? _documentChecklist;
   bool _isLoading = false;
+  String? _errorMessage;
   GrievanceModel? _currentGrievance;
+  CivicAssistResponse? _assistResponse;
 
   bool get isRecording => _isRecording;
   String get transcribedText => _transcribedText;
   String? get extractedRight => _extractedRight;
   List<String>? get documentChecklist => _documentChecklist;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
   GrievanceModel? get currentGrievance => _currentGrievance;
+  CivicAssistResponse? get assistResponse => _assistResponse;
 
-  VoiceChatViewModel({required AudioService audioService})
-    : _audioService = audioService;
+  VoiceChatViewModel({
+    required AudioService audioService,
+    CivicAssistService? civicAssistService,
+  }) : _audioService = audioService,
+       _civicAssistService = civicAssistService ?? CivicAssistService();
 
   Future<void> initializeAudio() async {
     await _audioService.initializeSpeech();
@@ -32,8 +43,10 @@ class VoiceChatViewModel extends ChangeNotifier {
   Future<void> startRecording({
     required String languageCode,
     required String userId,
+    required String city,
   }) async {
     _isRecording = true;
+    _errorMessage = null;
     notifyListeners();
 
     await _audioService.startListening(
@@ -42,7 +55,7 @@ class VoiceChatViewModel extends ChangeNotifier {
         _transcribedText = text;
         _isRecording = false;
         notifyListeners();
-        unawaited(_processGrievance(text, userId));
+        unawaited(_processGrievance(text, userId, city));
       },
     );
   }
@@ -53,37 +66,76 @@ class VoiceChatViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _processGrievance(String description, String userId) async {
+  Future<void> _processGrievance(
+    String description,
+    String userId,
+    String city,
+  ) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      // Simulate API call to process grievance
-      await Future.delayed(const Duration(seconds: 2));
+      // Get current location
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+      } catch (e) {
+        // Use default coordinates if location access fails
+        position = Position(
+          latitude: 28.6139,
+          longitude: 77.2090,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          heading: 0,
+          speed: 0,
+          speedAccuracy: 0,
+          altitudeAccuracy: 0,
+          headingAccuracy: 0,
+        );
+      }
 
-      // Mock data - In production, this would come from your AI backend
+      // Call Civic Assist API
+      _assistResponse = await _civicAssistService.getOfficeRecommendation(
+        problem: description,
+        city: city,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+
+      // Create grievance model from response
       _currentGrievance = GrievanceModel(
         id: 'grv_${DateTime.now().millisecondsSinceEpoch}',
         userId: userId,
-        title: 'Grievance from voice input',
+        title:
+            'Grievance: ${description.length > 30 ? description.substring(0, 30) + "..." : description}',
         description: description,
         transcription: description,
         category: _detectCategory(description),
         status: GrievanceStatus.new_,
-        extractedRight: _generateMockRight(description),
-        documentChecklist: _generateMockDocuments(),
+        extractedRight: _assistResponse!.conversationScript.opening,
+        documentChecklist: _assistResponse!.checklist.documents,
+        officeName: _assistResponse!.recommendedOffice.name,
+        officeLat: position.latitude,
+        officeLng: position.longitude,
+        escalationScript: _assistResponse!.conversationScript.followUps.join(
+          '\n',
+        ),
         createdAt: DateTime.now(),
       );
 
-      _extractedRight = _currentGrievance!.extractedRight;
-      _documentChecklist = _currentGrievance!.documentChecklist;
+      _extractedRight = _assistResponse!.conversationScript.opening;
+      _documentChecklist = _assistResponse!.checklist.documents;
 
       _isLoading = false;
       notifyListeners();
     } catch (e) {
+      _errorMessage = 'Failed to process grievance: $e';
       _isLoading = false;
       notifyListeners();
-      print('Error processing grievance: $e');
     }
   }
 
@@ -104,28 +156,6 @@ class VoiceChatViewModel extends ChangeNotifier {
     }
   }
 
-  String _generateMockRight(String description) {
-    final category = _detectCategory(description);
-    switch (category) {
-      case GrievanceCategory.ration:
-        return 'You have the right to receive your ration quota as per the Public Distribution System (PDS). If you are denied ration due to biometric mismatch, you can file a complaint with the District Collector.';
-      case GrievanceCategory.pensions:
-        return 'You are entitled to receive your pension on the scheduled date. If there is a delay, you can escalate to the Pension Disbursement Authority.';
-      case GrievanceCategory.landDisputes:
-        return 'Land rights are protected under Indian law. You can file a dispute with the District Land Records Office.';
-      case GrievanceCategory.fir:
-        return 'You have the right to file an FIR for any criminal offense. Visit the nearest police station with relevant documents.';
-      case GrievanceCategory.fertilizer:
-        return 'Farmers are entitled to subsidized fertilizers. Contact your block agricultural office if facing shortage.';
-      case GrievanceCategory.other:
-        return 'Your grievance has been noted. Please provide more details for better assistance.';
-    }
-  }
-
-  List<String> _generateMockDocuments() {
-    return ['Aadhar Card', 'Bank Passbook', 'Photo Identity', 'Address Proof'];
-  }
-
   Future<void> playResponse(String text, String languageCode) async {
     await _audioService.speak(text, languageCode: languageCode);
   }
@@ -139,7 +169,8 @@ class VoiceChatViewModel extends ChangeNotifier {
       grievances.add(_currentGrievance!.toJson().toString());
       await prefs.setStringList('grievances', grievances);
     } catch (e) {
-      print('Error saving grievance: $e');
+      _errorMessage = 'Error saving grievance: $e';
+      notifyListeners();
     }
   }
 
@@ -149,7 +180,9 @@ class VoiceChatViewModel extends ChangeNotifier {
     _extractedRight = null;
     _documentChecklist = null;
     _isLoading = false;
+    _errorMessage = null;
     _currentGrievance = null;
+    _assistResponse = null;
     notifyListeners();
   }
 

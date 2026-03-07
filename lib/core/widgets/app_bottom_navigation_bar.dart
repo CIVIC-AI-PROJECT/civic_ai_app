@@ -20,8 +20,6 @@ class AppBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
@@ -81,7 +79,6 @@ class AppBottomNavigationBar extends StatelessWidget {
     String label,
   ) {
     final isSelected = currentIndex == index;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Expanded(
       child: Material(
