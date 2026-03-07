@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:civic_ai_app/features/action_center/viewmodels/action_center_viewmodel.dart';
 import 'package:civic_ai_app/features/voice_chat/viewmodels/voice_chat_viewmodel.dart';
+import 'package:civic_ai_app/features/onboarding/viewmodels/onboarding_viewmodel.dart';
 import 'package:civic_ai_app/core/theme/app_theme.dart';
 import 'package:civic_ai_app/core/widgets/app_bottom_navigation_bar.dart';
 
@@ -19,6 +20,11 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final voiceChatVM = context.read<VoiceChatViewModel>();
       final actionCenterVM = context.read<ActionCenterViewModel>();
+      final onboarding = context.read<OnboardingViewModel>();
+      final city = (onboarding.selectedDistrict == 'Chandigarh' ||
+              onboarding.selectedState == 'Punjab')
+          ? 'Chandigarh'
+          : 'Delhi';
 
       if (voiceChatVM.currentGrievance != null) {
         actionCenterVM.setGrievance(voiceChatVM.currentGrievance!);
@@ -30,7 +36,7 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
           // Otherwise fetch office recommendations
           actionCenterVM.findNearestOffice(
             problem: voiceChatVM.currentGrievance!.description,
-            city: 'Delhi', // TODO: Get from user preferences or location
+            city: city,
           );
         }
       }
@@ -75,6 +81,48 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                     // Nearest Office
                     _buildNearestOfficeCard(viewModel),
                     const SizedBox(height: 20),
+
+                    // Alternative Offices
+                    if (viewModel.alternativeOffices.isNotEmpty)
+                      _buildAlternativeOfficesCard(viewModel),
+                    if (viewModel.alternativeOffices.isNotEmpty)
+                      const SizedBox(height: 20),
+
+                    // Steps from checklist
+                    if (viewModel.assistResponse != null &&
+                        viewModel.assistResponse!.checklist.steps.isNotEmpty)
+                      _buildStepsCard(viewModel),
+                    if (viewModel.assistResponse != null &&
+                        viewModel.assistResponse!.checklist.steps.isNotEmpty)
+                      const SizedBox(height: 20),
+
+                    // Error display
+                    if (viewModel.errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Card(
+                          color: Colors.red[50],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    color: Colors.red),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    viewModel.errorMessage!,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
 
                     // Generate Application Button
                     if (viewModel.grievance != null)
@@ -344,6 +392,12 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                           'Hours',
                           viewModel.recommendedOffice!.hours,
                         ),
+                        const SizedBox(height: 8),
+                        _buildOfficeInfoRow(
+                          Icons.phone,
+                          'Phone',
+                          viewModel.recommendedOffice!.phone,
+                        ),
                         const SizedBox(height: 12),
                         Container(
                           padding: const EdgeInsets.all(12),
@@ -423,10 +477,14 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       if (viewModel.grievance != null) {
+                        final onboarding = context.read<OnboardingViewModel>();
+                        final city = (onboarding.selectedDistrict == 'Chandigarh' ||
+                                onboarding.selectedState == 'Punjab')
+                            ? 'Chandigarh'
+                            : 'Delhi';
                         viewModel.findNearestOffice(
                           problem: viewModel.grievance!.description,
-                          city:
-                              'Delhi', // TODO: Get from user preferences or location
+                          city: city,
                         );
                       }
                     },
@@ -486,6 +544,209 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAlternativeOfficesCard(ActionCenterViewModel viewModel) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.largePadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.location_city,
+                    color: Colors.orange,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'Alternative Offices',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...viewModel.alternativeOffices.map(
+              (office) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      office.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.place, size: 16, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            office.address,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.directions, size: 16, color: Colors.grey[600]),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${office.distanceKm.toStringAsFixed(1)} km',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 16),
+                        Row(
+                          children: [
+                            Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
+                            const SizedBox(width: 4),
+                            Text(
+                              office.hours,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.phone, size: 16, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Text(
+                          office.phone,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepsCard(ActionCenterViewModel viewModel) {
+    final steps = viewModel.assistResponse!.checklist.steps;
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.largePadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.format_list_numbered,
+                    color: Colors.green,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'Steps to Follow',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...steps.asMap().entries.map(
+                  (entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${entry.key + 1}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            entry.value,
+                            style: const TextStyle(fontSize: 15, height: 1.4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+          ],
+        ),
+      ),
     );
   }
 }

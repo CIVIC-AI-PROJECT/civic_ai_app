@@ -15,6 +15,7 @@ class VoiceChatViewModel extends ChangeNotifier {
   String _transcribedText = '';
   String? _extractedRight;
   List<String>? _documentChecklist;
+  List<String>? _checklistSteps;
   bool _isLoading = false;
   String? _errorMessage;
   GrievanceModel? _currentGrievance;
@@ -24,6 +25,7 @@ class VoiceChatViewModel extends ChangeNotifier {
   String get transcribedText => _transcribedText;
   String? get extractedRight => _extractedRight;
   List<String>? get documentChecklist => _documentChecklist;
+  List<String>? get checklistSteps => _checklistSteps;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   GrievanceModel? get currentGrievance => _currentGrievance;
@@ -127,8 +129,9 @@ class VoiceChatViewModel extends ChangeNotifier {
         createdAt: DateTime.now(),
       );
 
-      _extractedRight = _assistResponse!.conversationScript.opening;
+      _extractedRight = _assistResponse!.recommendedOffice.explanation;
       _documentChecklist = _assistResponse!.checklist.documents;
+      _checklistSteps = _assistResponse!.checklist.steps;
 
       _isLoading = false;
       notifyListeners();
@@ -156,8 +159,24 @@ class VoiceChatViewModel extends ChangeNotifier {
     }
   }
 
+  /// Submit a typed problem (text input alternative to voice)
+  Future<void> submitTextProblem({
+    required String problem,
+    required String userId,
+    required String city,
+  }) async {
+    _transcribedText = problem;
+    notifyListeners();
+    await _processGrievance(problem, userId, city);
+  }
+
   Future<void> playResponse(String text, String languageCode) async {
     await _audioService.speak(text, languageCode: languageCode);
+  }
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 
   Future<void> saveGrievance() async {
@@ -183,6 +202,7 @@ class VoiceChatViewModel extends ChangeNotifier {
     _errorMessage = null;
     _currentGrievance = null;
     _assistResponse = null;
+    _checklistSteps = null;
     notifyListeners();
   }
 
