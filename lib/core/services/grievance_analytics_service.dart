@@ -26,14 +26,22 @@ class GrievanceAnalyticsService {
     try {
       final response = await _apiClient.get('/grievance/cluster');
 
-      if (response is List) {
-        return response
-            .map((e) => GrievanceCluster.fromJson(e as Map<String, dynamic>))
-            .toList();
-      } else if (response is Map && response.containsKey('clusters')) {
-        return (response['clusters'] as List)
-            .map((e) => GrievanceCluster.fromJson(e as Map<String, dynamic>))
-            .toList();
+      if (response is Map && response.containsKey('cluster_keywords')) {
+        final Map<String, dynamic> keywords =
+            response['cluster_keywords'] as Map<String, dynamic>;
+        final Map<String, dynamic> summary =
+            response['cluster_summary'] as Map<String, dynamic>? ?? {};
+
+        return keywords.entries.map((e) {
+          final clusterId = int.tryParse(e.key) ?? 0;
+          final countValue = summary[clusterId.toString()];
+          final count = countValue is num ? countValue.toInt() : 0;
+          return GrievanceCluster(
+            clusterId: clusterId,
+            keywords: (e.value as List<dynamic>).cast<String>(),
+            count: count,
+          );
+        }).toList();
       }
       return [];
     } catch (e) {
@@ -46,12 +54,12 @@ class GrievanceAnalyticsService {
     try {
       final response = await _apiClient.get('/grievance/anomaly');
 
-      if (response is List) {
-        return response
+      if (response is Map && response.containsKey('alerts')) {
+        return (response['alerts'] as List)
             .map((e) => GrievanceAnomaly.fromJson(e as Map<String, dynamic>))
             .toList();
-      } else if (response is Map && response.containsKey('anomalies')) {
-        return (response['anomalies'] as List)
+      } else if (response is List) {
+        return response
             .map((e) => GrievanceAnomaly.fromJson(e as Map<String, dynamic>))
             .toList();
       }
@@ -66,14 +74,14 @@ class GrievanceAnalyticsService {
     try {
       final response = await _apiClient.get('/grievance/heatmap');
 
-      if (response is List) {
-        return response
-            .map((e) => HeatmapDataPoint.fromJson(e as Map<String, dynamic>))
-            .toList();
-      } else if (response is Map && response.containsKey('heatmap')) {
-        return (response['heatmap'] as List)
-            .map((e) => HeatmapDataPoint.fromJson(e as Map<String, dynamic>))
-            .toList();
+      if (response is Map) {
+        return response.entries.map((e) {
+          final value = e.value;
+          return HeatmapDataPoint(
+            state: e.key as String,
+            intensity: value is num ? value.toInt() : 0,
+          );
+        }).toList();
       }
       return [];
     } catch (e) {
@@ -86,12 +94,12 @@ class GrievanceAnalyticsService {
     try {
       final response = await _apiClient.get('/grievance/recent-spikes');
 
-      if (response is List) {
-        return response
+      if (response is Map && response.containsKey('recent_spikes')) {
+        return (response['recent_spikes'] as List)
             .map((e) => RecentSpike.fromJson(e as Map<String, dynamic>))
             .toList();
-      } else if (response is Map && response.containsKey('spikes')) {
-        return (response['spikes'] as List)
+      } else if (response is List) {
+        return response
             .map((e) => RecentSpike.fromJson(e as Map<String, dynamic>))
             .toList();
       }

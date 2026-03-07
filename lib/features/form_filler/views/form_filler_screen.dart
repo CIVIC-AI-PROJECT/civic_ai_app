@@ -14,342 +14,495 @@ class FormFillerScreen extends StatefulWidget {
 class _FormFillerScreenState extends State<FormFillerScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Document Upload'), elevation: 0),
-      extendBody: true,
-      body: Consumer<FormFillerViewModel>(
-        builder: (context, viewModel, _) {
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withOpacity(0.05),
-                  Colors.white,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Document Upload'),
+          elevation: 0,
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Form Extraction', icon: Icon(Icons.description)),
+              Tab(text: 'Image Validation', icon: Icon(Icons.verified)),
+            ],
+          ),
+        ),
+        extendBody: true,
+        body: Consumer<FormFillerViewModel>(
+          builder: (context, viewModel, _) {
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.05),
+                    Colors.white,
+                  ],
+                ),
+              ),
+              child: TabBarView(
+                children: [
+                  _buildExtractionTab(context, viewModel),
+                  _buildValidationTab(context, viewModel),
                 ],
               ),
-            ),
-            child: SingleChildScrollView(
+            );
+          },
+        ),
+        bottomNavigationBar: const AppBottomNavigationBar(currentIndex: 2),
+      ),
+    );
+  }
+
+  Widget _buildExtractionTab(
+    BuildContext context,
+    FormFillerViewModel viewModel,
+  ) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: AppTheme.largePadding,
+          right: AppTheme.largePadding,
+          top: AppTheme.largePadding,
+          bottom: 100,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              elevation: 4,
+              color: Theme.of(
+                context,
+              ).colorScheme.secondaryContainer.withValues(alpha: 0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
-                padding: const EdgeInsets.only(
-                  left: AppTheme.largePadding,
-                  right: AppTheme.largePadding,
-                  top: AppTheme.largePadding,
-                  bottom: 100, // Extra padding for floating nav
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.all(AppTheme.largePadding),
+                child: Row(
                   children: [
-                    // Instructions
-                    Card(
-                      elevation: 4,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.secondaryContainer.withOpacity(0.2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.secondaryColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppTheme.largePadding),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppTheme.secondaryColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                Icons.info,
-                                color: AppTheme.secondaryColor,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Take clear photos of your documents. Our AI will extract the information automatically.',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodyLarge?.copyWith(height: 1.4),
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: Icon(
+                        Icons.info,
+                        color: AppTheme.secondaryColor,
+                        size: 24,
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Aadhar Upload
-                    _buildDocumentUploadCard(
-                      context,
-                      'Aadhar Card',
-                      'aadhar',
-                      viewModel.aadharPath,
-                      viewModel,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Ration Card Upload
-                    _buildDocumentUploadCard(
-                      context,
-                      'Ration Card',
-                      'ratiocard',
-                      viewModel.ratioCardPath,
-                      viewModel,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Other Documents
-                    _buildDocumentUploadCard(
-                      context,
-                      'Other Documents',
-                      'other',
-                      viewModel.otherDocPath,
-                      viewModel,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Extracted Data Display
-                    if (viewModel.extractedData != null)
-                      Card(
-                        elevation: 4,
-                        color: Theme.of(
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Capture clear photos and extract form data automatically.',
+                        style: Theme.of(
                           context,
-                        ).colorScheme.secondaryContainer.withOpacity(0.2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppTheme.largePadding),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.secondaryColor
-                                          .withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(
-                                      Icons.check_circle,
-                                      color: AppTheme.secondaryColor,
-                                      size: 24,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Extracted Information',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Form Type: ${viewModel.extractedData!.formType}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Confidence: ${(viewModel.extractedData!.confidence * 100).toStringAsFixed(1)}%',
-                                      style: TextStyle(
-                                        color:
-                                            viewModel
-                                                    .extractedData!
-                                                    .confidence >
-                                                0.75
-                                            ? Colors.green
-                                            : Colors.orange,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const Divider(height: 24),
-                                    const Text(
-                                      'Extracted Fields:',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ...viewModel
-                                        .extractedData!
-                                        .extractedFields
-                                        .entries
-                                        .map((entry) {
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 8,
-                                            ),
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  '${entry.key}: ',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  child: Text(
-                                                    entry.value.toString(),
-                                                    style: const TextStyle(
-                                                      height: 1.5,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        })
-                                        .toList(),
-                                    if (viewModel
-                                        .extractedData!
-                                        .missingFields
-                                        .isNotEmpty) ...[
-                                      const Divider(height: 24),
-                                      const Text(
-                                        'Missing Fields:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: Colors.orange,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ...viewModel.extractedData!.missingFields
-                                          .map((field) {
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 4,
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  const Icon(
-                                                    Icons.warning,
-                                                    size: 16,
-                                                    color: Colors.orange,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(field),
-                                                ],
-                                              ),
-                                            );
-                                          })
-                                          .toList(),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                    // Error Display
-                    if (viewModel.errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Card(
-                          elevation: 2,
-                          color: Colors.red[50],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Icon(Icons.error, color: Colors.red[700]),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    viewModel.errorMessage!,
-                                    style: TextStyle(color: Colors.red[900]),
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () => viewModel.clearError(),
-                                  icon: const Icon(Icons.close),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    const SizedBox(height: 8),
-
-                    // Generate Form Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            viewModel.extractedData != null &&
-                                !viewModel.isProcessing
-                            ? () async {
-                                final pdfPath = await viewModel
-                                    .generateFilledPDF();
-                                if (mounted && pdfPath.isNotEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Form generated: $pdfPath'),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              }
-                            : null,
-                        icon: const Icon(Icons.file_download, size: 24),
-                        label: const Text(
-                          'Generate Filled Form',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        ).textTheme.bodyLarge?.copyWith(height: 1.4),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          );
-        },
+            const SizedBox(height: 20),
+            _buildDocumentUploadCard(
+              context,
+              'Aadhar Card',
+              'aadhar',
+              viewModel.aadharPath,
+              viewModel,
+            ),
+            const SizedBox(height: 16),
+            _buildDocumentUploadCard(
+              context,
+              'Ration Card',
+              'ratiocard',
+              viewModel.ratioCardPath,
+              viewModel,
+            ),
+            const SizedBox(height: 16),
+            _buildDocumentUploadCard(
+              context,
+              'Other Documents',
+              'other',
+              viewModel.otherDocPath,
+              viewModel,
+            ),
+            const SizedBox(height: 20),
+            if (viewModel.extractedData != null)
+              Card(
+                elevation: 4,
+                color: Theme.of(
+                  context,
+                ).colorScheme.secondaryContainer.withValues(alpha: 0.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.largePadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppTheme.secondaryColor.withValues(
+                                alpha: 0.2,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.check_circle,
+                              color: AppTheme.secondaryColor,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Extracted Information',
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Form Type: ${viewModel.extractedData!.formType}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Confidence: ${(viewModel.extractedData!.confidence * 100).toStringAsFixed(1)}%',
+                              style: TextStyle(
+                                color:
+                                    viewModel.extractedData!.confidence > 0.75
+                                    ? Colors.green
+                                    : Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Divider(height: 24),
+                            const Text(
+                              'Extracted Fields:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ...viewModel.extractedData!.extractedFields.entries
+                                .map(
+                                  (entry) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${entry.key}: ',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            entry.value.toString(),
+                                            style: const TextStyle(height: 1.5),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            if (viewModel
+                                .extractedData!
+                                .missingFields
+                                .isNotEmpty) ...[
+                              const Divider(height: 24),
+                              const Text(
+                                'Missing Fields:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ...viewModel.extractedData!.missingFields.map(
+                                (field) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.warning,
+                                        size: 16,
+                                        color: Colors.orange,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(field),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            _buildErrorCard(viewModel),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed:
+                    viewModel.extractedData != null && !viewModel.isProcessing
+                    ? () async {
+                        final pdfPath = await viewModel.generateFilledPDF();
+                        if (!context.mounted) return;
+                        if (pdfPath.isNotEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Form generated: $pdfPath'),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    : null,
+                icon: const Icon(Icons.file_download, size: 24),
+                label: const Text(
+                  'Generate Filled Form',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-      bottomNavigationBar: const AppBottomNavigationBar(currentIndex: 2),
+    );
+  }
+
+  Widget _buildValidationTab(
+    BuildContext context,
+    FormFillerViewModel viewModel,
+  ) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: AppTheme.largePadding,
+          right: AppTheme.largePadding,
+          top: AppTheme.largePadding,
+          bottom: 100,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Card(
+              elevation: 4,
+              color: Theme.of(
+                context,
+              ).colorScheme.secondaryContainer.withValues(alpha: 0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppTheme.largePadding),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.secondaryColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.verified,
+                        color: AppTheme.secondaryColor,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Validate document quality first, then switch to Form Extraction to process data.',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildDocumentUploadCard(
+              context,
+              'Aadhar Card',
+              'aadhar',
+              viewModel.aadharPath,
+              viewModel,
+              validationOnly: true,
+            ),
+            const SizedBox(height: 16),
+            _buildDocumentUploadCard(
+              context,
+              'Ration Card',
+              'ratiocard',
+              viewModel.ratioCardPath,
+              viewModel,
+              validationOnly: true,
+            ),
+            const SizedBox(height: 16),
+            _buildDocumentUploadCard(
+              context,
+              'Other Documents',
+              'other',
+              viewModel.otherDocPath,
+              viewModel,
+              validationOnly: true,
+            ),
+            const SizedBox(height: 20),
+            if (viewModel.validationResult != null)
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.largePadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            viewModel.validationResult!.isValid
+                                ? Icons.check_circle
+                                : Icons.warning,
+                            color: viewModel.validationResult!.isValid
+                                ? Colors.green
+                                : Colors.orange,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            viewModel.validationResult!.isValid
+                                ? 'Image quality is valid'
+                                : 'Image quality needs improvement',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Quality Score: ${(viewModel.validationResult!.quality * 100).toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          color: viewModel.validationResult!.quality >= 0.75
+                              ? Colors.green
+                              : Colors.orange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (viewModel.validationResult!.issues.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Issues:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 6),
+                        ...viewModel.validationResult!.issues.map(
+                          (issue) => Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.circle,
+                                  size: 8,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(issue)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            _buildErrorCard(viewModel),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorCard(FormFillerViewModel viewModel) {
+    if (viewModel.errorMessage == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Card(
+        elevation: 2,
+        color: Colors.red[50],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(Icons.error, color: Colors.red[700]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  viewModel.errorMessage!,
+                  style: TextStyle(color: Colors.red[900]),
+                ),
+              ),
+              IconButton(
+                onPressed: () => viewModel.clearError(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -358,8 +511,9 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
     String title,
     String docType,
     String? imagePath,
-    FormFillerViewModel viewModel,
-  ) {
+    FormFillerViewModel viewModel, {
+    bool validationOnly = false,
+  }) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -373,7 +527,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -451,11 +605,13 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () =>
-                        viewModel.captureDocument(documentType: docType),
+                    onPressed: () => viewModel.captureDocument(
+                      documentType: docType,
+                      processAfterValidation: !validationOnly,
+                    ),
                     icon: const Icon(Icons.camera, size: 22),
-                    label: const Text(
-                      'Capture',
+                    label: Text(
+                      validationOnly ? 'Capture + Validate' : 'Capture',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,

@@ -26,6 +26,16 @@
 	<string>$(PRODUCT_COPYRIGHT)</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to record your grievance and complaints</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app needs speech recognition access to convert your voice complaint into text</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to capture your government documents</string>
+	<key>NSLocationUsageDescription</key>
+	<string>This app needs your location to find the nearest grievance redressal office</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photos to upload government documents</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

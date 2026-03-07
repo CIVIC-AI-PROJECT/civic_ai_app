@@ -27,7 +27,10 @@ class FormFillerViewModel extends ChangeNotifier {
   FormFillerViewModel({FormProcessingService? formService})
     : _formService = formService ?? FormProcessingService();
 
-  Future<void> captureDocument({required String documentType}) async {
+  Future<void> captureDocument({
+    required String documentType,
+    bool processAfterValidation = true,
+  }) async {
     try {
       _isProcessing = true;
       _errorMessage = null;
@@ -53,7 +56,7 @@ class FormFillerViewModel extends ChangeNotifier {
 
         // Validate and process image
         await validateDocumentQuality(image.path);
-        if (_validationResult?.isValid == true) {
+        if (processAfterValidation && _validationResult?.isValid == true) {
           await _processImageWithVision(image.path, documentType);
         }
       }

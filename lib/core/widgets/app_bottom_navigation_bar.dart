@@ -10,6 +10,7 @@ class AppBottomNavigationBar extends StatelessWidget {
     '/home',
     '/action-center',
     '/form-filler',
+    '/intelligence-dashboard',
     '/escalation-playbook',
   ];
 
@@ -28,13 +29,13 @@ class AppBottomNavigationBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.15),
+            color: AppTheme.primaryColor.withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, 8),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
             spreadRadius: 0,
@@ -62,6 +63,13 @@ class AppBottomNavigationBar extends StatelessWidget {
           _buildNavItem(
             context,
             3,
+            Icons.bar_chart_outlined,
+            Icons.bar_chart,
+            'Stats',
+          ),
+          _buildNavItem(
+            context,
+            4,
             Icons.account_tree_outlined,
             Icons.account_tree,
             'Escalate',
@@ -94,8 +102,8 @@ class AppBottomNavigationBar extends StatelessWidget {
               gradient: isSelected
                   ? LinearGradient(
                       colors: [
-                        AppTheme.primaryColor.withOpacity(0.15),
-                        AppTheme.secondaryColor.withOpacity(0.08),
+                        AppTheme.primaryColor.withValues(alpha: 0.15),
+                        AppTheme.secondaryColor.withValues(alpha: 0.08),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,

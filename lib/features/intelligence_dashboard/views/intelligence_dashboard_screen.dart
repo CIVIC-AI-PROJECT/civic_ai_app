@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:civic_ai_app/features/intelligence_dashboard/viewmodels/intelligence_dashboard_viewmodel.dart';
 import 'package:civic_ai_app/core/theme/app_theme.dart';
+import 'package:civic_ai_app/core/widgets/app_bottom_navigation_bar.dart';
 import 'package:civic_ai_app/models/grievance_analytics_models.dart';
 
 class IntelligenceDashboardScreen extends StatefulWidget {
@@ -24,127 +25,356 @@ class _IntelligenceDashboardScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Intelligence Dashboard'),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              context.read<IntelligenceDashboardViewModel>().refreshAll();
-            },
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Intelligence Dashboard'),
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                context.read<IntelligenceDashboardViewModel>().refreshAll();
+              },
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Overview', icon: Icon(Icons.dashboard_outlined)),
+              Tab(text: 'Graphs', icon: Icon(Icons.bar_chart_outlined)),
+              Tab(text: 'Insights', icon: Icon(Icons.analytics_outlined)),
+            ],
           ),
-        ],
-      ),
-      body: Consumer<IntelligenceDashboardViewModel>(
-        builder: (context, viewModel, _) {
-          if (viewModel.isLoading && viewModel.dashboard == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        ),
+        body: Consumer<IntelligenceDashboardViewModel>(
+          builder: (context, viewModel, _) {
+            if (viewModel.isLoading && viewModel.dashboard == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (viewModel.errorMessage != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            if (viewModel.errorMessage != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading dashboard',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      viewModel.errorMessage!,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => viewModel.loadDashboard(),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (viewModel.dashboard == null) {
+              return const Center(child: Text('No data available'));
+            }
+
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.05),
+                    Colors.white,
+                  ],
+                ),
+              ),
+              child: TabBarView(
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading dashboard',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  _buildOverviewTab(viewModel),
+                  _buildGraphsTab(viewModel),
+                  _buildInsightsTab(viewModel),
+                ],
+              ),
+            );
+          },
+        ),
+        bottomNavigationBar: const AppBottomNavigationBar(currentIndex: 3),
+      ),
+    );
+  }
+
+  Widget _buildOverviewTab(IntelligenceDashboardViewModel viewModel) {
+    return RefreshIndicator(
+      onRefresh: () => viewModel.refreshAll(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppTheme.largePadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStatsGrid(viewModel.dashboard!),
+            const SizedBox(height: 24),
+            _buildSectionHeader('Recent Spikes', Icons.trending_up),
+            const SizedBox(height: 12),
+            _buildRecentSpikes(viewModel.dashboard!.recentSpikes),
+            const SizedBox(height: 24),
+            _buildSectionHeader('Grievance Clusters', Icons.group_work),
+            const SizedBox(height: 12),
+            _buildClusters(viewModel.dashboard!.topClusters),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGraphsTab(IntelligenceDashboardViewModel viewModel) {
+    return RefreshIndicator(
+      onRefresh: () => viewModel.refreshAll(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppTheme.largePadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader(
+              'Cluster Distribution Graph',
+              Icons.stacked_bar_chart,
+            ),
+            const SizedBox(height: 12),
+            _buildClustersGraph(viewModel.dashboard!.topClusters),
+            const SizedBox(height: 24),
+            _buildSectionHeader('Spike Trend Graph', Icons.trending_up),
+            const SizedBox(height: 12),
+            _buildSpikeGraph(viewModel.dashboard!.recentSpikes),
+            const SizedBox(height: 24),
+            _buildSectionHeader('Issue Distribution', Icons.pie_chart),
+            const SizedBox(height: 12),
+            _buildIssueDistribution(viewModel.dashboard!.recentSpikes),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInsightsTab(IntelligenceDashboardViewModel viewModel) {
+    return RefreshIndicator(
+      onRefresh: () => viewModel.refreshAll(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppTheme.largePadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader('Heatmap Intensity Insights', Icons.map),
+            const SizedBox(height: 12),
+            _buildStateHeatmapInsights(viewModel.dashboard!.stateHeatmap),
+            const SizedBox(height: 24),
+            _buildSectionHeader('Recent Spikes Summary', Icons.trending_up),
+            const SizedBox(height: 12),
+            _buildTopSpikes(viewModel.dashboard!.recentSpikes),
+            const SizedBox(height: 24),
+            _buildSectionHeader('Cluster Keywords', Icons.hub_outlined),
+            const SizedBox(height: 12),
+            _buildClusterKeywords(viewModel.dashboard!.topClusters),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClustersGraph(List<GrievanceCluster> clusters) {
+    if (clusters.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: Text('No cluster graph data available')),
+        ),
+      );
+    }
+
+    final maxCount = clusters
+        .map((cluster) => cluster.count)
+        .fold<int>(0, (max, value) => value > max ? value : max);
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: clusters.map((cluster) {
+            final ratio = maxCount == 0 ? 0.0 : cluster.count / maxCount;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Cluster ${cluster.clusterId}',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      Text(
+                        cluster.count.toString(),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    viewModel.errorMessage!,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () => viewModel.loadDashboard(),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(
+                    value: ratio,
+                    minHeight: 10,
+                    borderRadius: BorderRadius.circular(5),
+                    backgroundColor: Colors.grey[200],
                   ),
                 ],
               ),
             );
-          }
+          }).toList(),
+        ),
+      ),
+    );
+  }
 
-          if (viewModel.dashboard == null) {
-            return const Center(child: Text('No data available'));
-          }
+  Widget _buildSpikeGraph(List<RecentSpike> spikes) {
+    if (spikes.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: Text('No spike graph data available')),
+        ),
+      );
+    }
 
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withOpacity(0.05),
-                  Colors.white,
+    final maxGrowth = spikes
+        .map((spike) => spike.growth)
+        .fold<int>(0, (max, value) => value > max ? value : max);
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: spikes.take(8).map((spike) {
+            final ratio = maxGrowth == 0 ? 0.0 : spike.growth / maxGrowth;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${spike.state} • ${spike.issue}',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                        ),
+                      ),
+                      Text(
+                        '+${spike.growth}',
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(
+                    value: ratio,
+                    minHeight: 10,
+                    borderRadius: BorderRadius.circular(5),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+                    backgroundColor: Colors.red.shade50,
+                  ),
                 ],
               ),
-            ),
-            child: RefreshIndicator(
-              onRefresh: () => viewModel.refreshAll(),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(AppTheme.largePadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Statistics Cards
-                    _buildStatsGrid(viewModel.dashboard!.stats),
-                    const SizedBox(height: 24),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
 
-                    // Recent Spikes
-                    _buildSectionHeader('Recent Spikes', Icons.trending_up),
-                    const SizedBox(height: 12),
-                    _buildRecentSpikes(viewModel.dashboard!.recentSpikes),
-                    const SizedBox(height: 24),
+  Widget _buildStateHeatmapInsights(Map<String, int> stateHeatmap) {
+    if (stateHeatmap.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: Text('No heatmap insights available')),
+        ),
+      );
+    }
 
-                    // Top Clusters
-                    _buildSectionHeader('Grievance Clusters', Icons.group_work),
-                    const SizedBox(height: 12),
-                    _buildClusters(viewModel.dashboard!.topClusters),
-                    const SizedBox(height: 24),
+    final sortedStates = stateHeatmap.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topStates = sortedStates.take(10).toList();
 
-                    // Anomalies
-                    _buildSectionHeader(
-                      'Detected Anomalies',
-                      Icons.warning_amber,
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: topStates.map((entry) {
+            final percentage =
+                (entry.value / stateHeatmap.values.reduce((a, b) => a + b)) *
+                100;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        entry.key,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '${entry.value} cases',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(
+                    value: percentage / 100,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(5),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.deepOrange.withValues(alpha: 0.7),
                     ),
-                    const SizedBox(height: 12),
-                    _buildAnomalies(viewModel.dashboard!.anomalies),
-                    const SizedBox(height: 24),
-
-                    // Category Distribution
-                    _buildSectionHeader(
-                      'Category Distribution',
-                      Icons.pie_chart,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildCategoryDistribution(
-                      viewModel.dashboard!.categoryDistribution,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Resolution Rates
-                    _buildSectionHeader(
-                      'Resolution Rates',
-                      Icons.check_circle_outline,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildResolutionRates(viewModel.dashboard!.resolutionRates),
-                  ],
-                ),
+                    backgroundColor: Colors.deepOrange.withValues(alpha: 0.1),
+                  ),
+                ],
               ),
-            ),
-          );
-        },
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -164,7 +394,7 @@ class _IntelligenceDashboardScreenState
     );
   }
 
-  Widget _buildStatsGrid(DashboardStats stats) {
+  Widget _buildStatsGrid(IntelligenceDashboard dashboard) {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -175,39 +405,27 @@ class _IntelligenceDashboardScreenState
       children: [
         _buildStatCard(
           'Total Grievances',
-          stats.totalGrievances.toString(),
+          dashboard.totalRecords.toString(),
           Icons.description,
           Colors.blue,
         ),
         _buildStatCard(
-          'Active',
-          stats.activeGrievances.toString(),
-          Icons.pending_actions,
-          Colors.orange,
-        ),
-        _buildStatCard(
-          'Resolved',
-          stats.resolvedGrievances.toString(),
-          Icons.check_circle,
-          Colors.green,
-        ),
-        _buildStatCard(
-          'Avg Resolution Time',
-          '${stats.averageResolutionTime.toStringAsFixed(1)} days',
-          Icons.timer,
-          Colors.purple,
-        ),
-        _buildStatCard(
-          'Clusters',
-          stats.totalClusters.toString(),
+          'Total Clusters',
+          dashboard.topClusters.length.toString(),
           Icons.group_work,
           Colors.teal,
         ),
         _buildStatCard(
-          'Anomalies',
-          stats.totalAnomalies.toString(),
-          Icons.warning,
-          Colors.red,
+          'States Affected',
+          dashboard.stateHeatmap.length.toString(),
+          Icons.location_on,
+          Colors.purple,
+        ),
+        _buildStatCard(
+          'Recent Spikes',
+          dashboard.recentSpikes.length.toString(),
+          Icons.trending_up,
+          Colors.orange,
         ),
       ],
     );
@@ -265,7 +483,14 @@ class _IntelligenceDashboardScreenState
     }
 
     return Column(
-      children: spikes.map((spike) {
+      children: spikes.take(5).map((spike) {
+        final growthPercentage =
+            spike.previousCount == 0 && spike.recentCount > 0
+            ? 100.0
+            : spike.previousCount == 0
+            ? 0.0
+            : (spike.growth / spike.previousCount) * 100;
+
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(
@@ -277,17 +502,17 @@ class _IntelligenceDashboardScreenState
               child: Icon(Icons.trending_up, color: Colors.red[700]),
             ),
             title: Text(
-              spike.category,
+              spike.state,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            subtitle: Text('${spike.region}\n${spike.description}'),
+            subtitle: Text('${spike.issue}\nRecent: ${spike.recentCount}'),
             isThreeLine: true,
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '+${spike.percentageIncrease.toStringAsFixed(1)}%',
+                  '+${spike.growth}',
                   style: TextStyle(
                     color: Colors.red[700],
                     fontWeight: FontWeight.bold,
@@ -295,7 +520,7 @@ class _IntelligenceDashboardScreenState
                   ),
                 ),
                 Text(
-                  '${spike.count} cases',
+                  'Growth: ${growthPercentage.toStringAsFixed(0)}%',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -335,10 +560,10 @@ class _IntelligenceDashboardScreenState
               ),
             ),
             title: Text(
-              cluster.category,
+              'Cluster ${cluster.clusterId}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            subtitle: Text(cluster.region),
+            subtitle: Text('${cluster.keywords.length} keywords'),
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -391,17 +616,22 @@ class _IntelligenceDashboardScreenState
     }
 
     return Column(
-      children: anomalies.map((anomaly) {
-        Color severityColor;
-        switch (anomaly.severity.toLowerCase()) {
-          case 'high':
-            severityColor = Colors.red;
-            break;
-          case 'medium':
-            severityColor = Colors.orange;
-            break;
-          default:
-            severityColor = Colors.yellow[700]!;
+      children: anomalies.take(10).map((anomaly) {
+        // Determine severity based on count
+        late Color severityColor;
+        late String severity;
+        if (anomaly.count > 100) {
+          severityColor = Colors.red;
+          severity = 'HIGH';
+        } else if (anomaly.count > 50) {
+          severityColor = Colors.orange;
+          severity = 'MEDIUM';
+        } else if (anomaly.count > 20) {
+          severityColor = Colors.amber;
+          severity = 'LOW';
+        } else {
+          severityColor = Colors.blue;
+          severity = 'INFO';
         }
 
         return Card(
@@ -411,14 +641,18 @@ class _IntelligenceDashboardScreenState
           ),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: severityColor.withOpacity(0.2),
+              backgroundColor: severityColor.withValues(alpha: 0.2),
               child: Icon(Icons.warning, color: severityColor),
             ),
             title: Text(
-              anomaly.category,
+              anomaly.state,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            subtitle: Text('${anomaly.region}\n${anomaly.description}'),
+            subtitle: Text(
+              anomaly.issue,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
             isThreeLine: true,
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -430,11 +664,11 @@ class _IntelligenceDashboardScreenState
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: severityColor.withOpacity(0.2),
+                    color: severityColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    anomaly.severity.toUpperCase(),
+                    severity,
                     style: TextStyle(
                       color: severityColor,
                       fontWeight: FontWeight.bold,
@@ -444,7 +678,7 @@ class _IntelligenceDashboardScreenState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Score: ${(anomaly.anomalyScore * 100).toStringAsFixed(0)}',
+                  '${anomaly.count} cases',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -558,6 +792,216 @@ class _IntelligenceDashboardScreenState
                     valueColor: AlwaysStoppedAnimation<Color>(color),
                     minHeight: 8,
                     borderRadius: BorderRadius.circular(4),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIssueDistribution(List<RecentSpike> spikes) {
+    if (spikes.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: Text('No issue distribution data')),
+        ),
+      );
+    }
+
+    // Group spikes by issue and sum counts
+    final issueMap = <String, int>{};
+    for (final spike in spikes) {
+      issueMap[spike.issue] = (issueMap[spike.issue] ?? 0) + spike.recentCount;
+    }
+
+    final sortedIssues = issueMap.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topIssues = sortedIssues.take(6).toList();
+    final maxCount = topIssues.isNotEmpty ? topIssues[0].value : 1;
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: topIssues.map((entry) {
+            final ratio = maxCount == 0 ? 0.0 : entry.value / maxCount;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          entry.key,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      Text(
+                        '${entry.value}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(
+                    value: ratio,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(4),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.teal,
+                    ),
+                    backgroundColor: Colors.teal.withValues(alpha: 0.1),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopSpikes(List<RecentSpike> spikes) {
+    if (spikes.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: Text('No spikes to show')),
+        ),
+      );
+    }
+
+    final sortedSpikes = spikes.toList()
+      ..sort((a, b) => b.growth.compareTo(a.growth));
+    final topSpikes = sortedSpikes.take(5).toList();
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: topSpikes.asMap().entries.map((entry) {
+            final index = entry.key + 1;
+            final spike = entry.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.red[100],
+                    radius: 20,
+                    child: Text(
+                      index.toString(),
+                      style: TextStyle(
+                        color: Colors.red[700],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          spike.state,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          spike.issue,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '+${spike.growth}',
+                        style: TextStyle(
+                          color: Colors.red[700],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        '${spike.recentCount} now',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClusterKeywords(List<GrievanceCluster> clusters) {
+    if (clusters.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: Text('No cluster keywords available')),
+        ),
+      );
+    }
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: clusters.map((cluster) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Chip(
+                        label: Text('Cluster ${cluster.clusterId}'),
+                        backgroundColor: Colors.blue[100],
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${cluster.count} grievances',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: cluster.keywords.take(5).map((keyword) {
+                      return Chip(
+                        label: Text(keyword),
+                        backgroundColor: Colors.blue[50],
+                        labelStyle: TextStyle(color: Colors.blue[700]),
+                      );
+                    }).toList(),
                   ),
                 ],
               ),

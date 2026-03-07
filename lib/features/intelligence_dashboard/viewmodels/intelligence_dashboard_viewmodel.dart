@@ -34,8 +34,10 @@ class IntelligenceDashboardViewModel extends ChangeNotifier {
 
       // Extract data from dashboard
       _clusters = _dashboard!.topClusters;
-      _anomalies = _dashboard!.anomalies;
       _recentSpikes = _dashboard!.recentSpikes;
+
+      // Load anomalies separately
+      _anomalies = await _analyticsService.getAnomalies();
 
       _isLoading = false;
       notifyListeners();

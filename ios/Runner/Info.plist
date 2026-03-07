@@ -57,9 +57,15 @@
 	<!-- Location permission for finding nearest office -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs your location to find the nearest grievance redressal office</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs location access to continue supporting grievance workflows based on your location</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs location access to continue supporting grievance workflows based on your location</string>
 	<!-- Photo library permission for image picker -->
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photos to upload government documents</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs permission to save processed document images to your photo library</string>
 	<!-- Background audio for text-to-speech -->
 	<key>UIBackgroundModes</key>
 	<array>

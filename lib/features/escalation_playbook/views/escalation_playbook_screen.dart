@@ -136,7 +136,7 @@ class _EscalationPlaybookScreenState extends State<EscalationPlaybookScreen> {
           );
         },
       ),
-      bottomNavigationBar: const AppBottomNavigationBar(currentIndex: 3),
+      bottomNavigationBar: const AppBottomNavigationBar(currentIndex: 4),
     );
   }
 

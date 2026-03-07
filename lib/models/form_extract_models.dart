@@ -16,15 +16,30 @@ class FormExtractResponse {
   });
 
   factory FormExtractResponse.fromJson(Map<String, dynamic> json) {
+    // Handle nested data structure and errors
+    final data = json['data'] as Map<String, dynamic>? ?? json;
+
+    // Check for error in response
+    String? errorMsg;
+    if (data.containsKey('error')) {
+      final error = data['error'];
+      if (error is Map) {
+        final errorDetail = error['error'] as Map?;
+        if (errorDetail != null) {
+          errorMsg = '${errorDetail['message'] ?? 'Unknown error'}';
+        }
+      }
+    }
+
     return FormExtractResponse(
-      formType: json['form_type'] as String? ?? 'unknown',
+      formType: data['form_type'] as String? ?? 'unknown',
       extractedFields: Map<String, dynamic>.from(
-        json['extracted_fields'] as Map? ?? {},
+        data['extracted_fields'] as Map? ?? {},
       ),
-      confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+      confidence: (data['confidence'] as num?)?.toDouble() ?? 0.0,
       missingFields:
-          (json['missing_fields'] as List<dynamic>?)?.cast<String>() ?? [],
-      errorMessage: json['error_message'] as String?,
+          (data['missing_fields'] as List<dynamic>?)?.cast<String>() ?? [],
+      errorMessage: errorMsg ?? json['message'] as String?,
     );
   }
 
@@ -40,79 +55,59 @@ class FormExtractResponse {
 }
 
 class ImageValidationResponse {
-  final bool isValid;
-  final double quality;
-  final List<String> issues;
-  final ImageValidationDetails details;
+  final bool isBlurry;
+  final double blurScore;
+  final double thresholdUsed;
   final String? errorMessage;
 
+  bool get isValid => !isBlurry;
+
+  double get quality {
+    if (thresholdUsed <= 0) {
+      return 1.0;
+    }
+    final normalized = blurScore / thresholdUsed;
+    if (normalized < 0) {
+      return 0.0;
+    }
+    if (normalized > 1) {
+      return 1.0;
+    }
+    return normalized;
+  }
+
+  List<String> get issues => isBlurry ? ['Image is blurry'] : const [];
+
   ImageValidationResponse({
-    required this.isValid,
-    required this.quality,
-    required this.issues,
-    required this.details,
+    required this.isBlurry,
+    required this.blurScore,
+    required this.thresholdUsed,
     this.errorMessage,
   });
 
   factory ImageValidationResponse.fromJson(Map<String, dynamic> json) {
+    // Handle the nested 'data' structure from the API
+    final data = json['data'] as Map<String, dynamic>? ?? json;
+
     return ImageValidationResponse(
-      isValid: json['is_valid'] as bool? ?? false,
-      quality: (json['quality'] as num?)?.toDouble() ?? 0.0,
-      issues: (json['issues'] as List<dynamic>?)?.cast<String>() ?? [],
-      details: ImageValidationDetails.fromJson(
-        json['details'] as Map<String, dynamic>? ?? {},
-      ),
-      errorMessage: json['error_message'] as String?,
+      isBlurry:
+          data['is_blurry'] as bool? ?? !(data['is_valid'] as bool? ?? true),
+      blurScore:
+          (data['blur_score'] as num?)?.toDouble() ??
+          (((data['quality'] as num?)?.toDouble() ?? 0.0) *
+              ((data['threshold_used'] as num?)?.toDouble() ?? 800.0)),
+      thresholdUsed: (data['threshold_used'] as num?)?.toDouble() ?? 800.0,
+      errorMessage:
+          json['error_message'] as String? ?? json['message'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'is_valid': isValid,
-      'quality': quality,
-      'issues': issues,
-      'details': details.toJson(),
+      'is_blurry': isBlurry,
+      'blur_score': blurScore,
+      'threshold_used': thresholdUsed,
       if (errorMessage != null) 'error_message': errorMessage,
-    };
-  }
-}
-
-class ImageValidationDetails {
-  final double brightness;
-  final double sharpness;
-  final bool hasText;
-  final String? orientation;
-  final int? width;
-  final int? height;
-
-  ImageValidationDetails({
-    required this.brightness,
-    required this.sharpness,
-    required this.hasText,
-    this.orientation,
-    this.width,
-    this.height,
-  });
-
-  factory ImageValidationDetails.fromJson(Map<String, dynamic> json) {
-    return ImageValidationDetails(
-      brightness: (json['brightness'] as num?)?.toDouble() ?? 0.0,
-      sharpness: (json['sharpness'] as num?)?.toDouble() ?? 0.0,
-      hasText: json['has_text'] as bool? ?? false,
-      orientation: json['orientation'] as String?,
-      width: json['width'] as int?,
-      height: json['height'] as int?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'brightness': brightness,
-      'sharpness': sharpness,
-      'has_text': hasText,
-      if (orientation != null) 'orientation': orientation,
-      if (width != null) 'width': width,
-      if (height != null) 'height': height,
     };
   }
 }

@@ -16,7 +16,7 @@ class FormProcessingService {
       final response = await _apiClient.postMultipart(
         '/form/extract',
         file: imageFile,
-        fieldName: 'image',
+        fieldName: 'file',
       );
 
       return FormExtractResponse.fromJson(response as Map<String, dynamic>);
@@ -31,7 +31,7 @@ class FormProcessingService {
       final response = await _apiClient.postMultipart(
         '/image-validation/validate-image',
         file: imageFile,
-        fieldName: 'image',
+        fieldName: 'file',
       );
 
       return ImageValidationResponse.fromJson(response as Map<String, dynamic>);
