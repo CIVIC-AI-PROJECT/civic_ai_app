@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:civic_ai_app/features/voice_chat/viewmodels/voice_chat_viewmodel.dart';
+import 'package:civic_ai_app/features/onboarding/viewmodels/onboarding_viewmodel.dart';
 import 'package:civic_ai_app/core/theme/app_theme.dart';
 import 'package:civic_ai_app/core/constants/app_constants.dart';
 import 'package:civic_ai_app/core/widgets/app_bottom_navigation_bar.dart';
@@ -14,11 +15,26 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _currentLanguage = 'en';
+  final TextEditingController _problemController = TextEditingController();
+
+  /// Maps the user's selected location to a city the API supports (Delhi or Chandigarh).
+  String get _userCity {
+    final onboarding = context.read<OnboardingViewModel>();
+    final district = onboarding.selectedDistrict;
+    final state = onboarding.selectedState;
+    if (district == 'Chandigarh' || state == 'Punjab') {
+      return 'Chandigarh';
+    }
+    return 'Delhi';
+  }
 
   @override
   void initState() {
     super.initState();
     _initializeAudio();
+    _problemController.addListener(() {
+      setState(() {});
+    });
   }
 
   Future<void> _initializeAudio() async {
@@ -33,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _problemController.dispose();
     super.dispose();
   }
 
@@ -43,6 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
       extendBody: true,
       body: Consumer<VoiceChatViewModel>(
         builder: (context, viewModel, _) {
+          if (viewModel.isLoading) {
+            return _buildLoadingView();
+          }
           if (viewModel.currentGrievance != null) {
             return _buildGrievanceView(viewModel);
           }
@@ -50,6 +70,31 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
       bottomNavigationBar: const AppBottomNavigationBar(currentIndex: 0),
+    );
+  }
+
+  Widget _buildLoadingView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(strokeWidth: 3),
+          const SizedBox(height: 24),
+          Text(
+            'Finding the best office for you...',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Analyzing your problem & checking nearby offices',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -75,6 +120,36 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: Column(
             children: [
+              // Error display
+              if (viewModel.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Card(
+                    color: Colors.red[50],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.red),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              viewModel.errorMessage!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () => viewModel.clearError(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 32),
               Text(
                 'What problem are you facing today?',
@@ -91,6 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   await viewModel.startRecording(
                     languageCode: _currentLanguage,
                     userId: 'current_user',
+                    city: _userCity,
                   );
                 },
                 child: AnimatedContainer(
@@ -181,7 +257,90 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 56),
+              const SizedBox(height: 32),
+              // OR Divider
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey[300])),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'OR type your problem',
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey[300])),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Text Input
+              TextField(
+                controller: _problemController,
+                maxLines: 3,
+                minLines: 2,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  hintText: 'e.g. I want to correct my birth certificate',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppTheme.primaryColor.withOpacity(0.3),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.grey[300]!,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppTheme.primaryColor,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _problemController.text.trim().isEmpty
+                      ? null
+                      : () async {
+                          FocusScope.of(context).unfocus();
+                          await viewModel.submitTextProblem(
+                            problem: _problemController.text.trim(),
+                            userId: 'current_user',
+                            city: _userCity,
+                          );
+                        },
+                  icon: const Icon(Icons.send, size: 20),
+                  label: const Text(
+                    'Submit',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
               // Quick Category Buttons
               Align(
                 alignment: Alignment.centerLeft,
@@ -209,12 +368,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildQuickCard(String category) {
+    final viewModel = context.read<VoiceChatViewModel>();
+    // Map display label to a descriptive problem sentence
+    final Map<String, String> categoryProblems = {
+      'Ration/PDS': 'I have a problem with my ration card or PDS services',
+      'Pensions': 'I need help with my pension related issues',
+      'Land Disputes': 'I have a land dispute that needs resolution',
+      'FIR/Police': 'I need to file an FIR or have a police related issue',
+    };
     return Material(
       elevation: 2,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: () {
-          // Handle quick category tap
+          final problem = categoryProblems[category] ?? category;
+          viewModel.submitTextProblem(
+            problem: problem,
+            userId: 'current_user',
+            city: _userCity,
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
@@ -402,6 +574,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               // What To Say Block
+              if (viewModel.assistResponse != null)
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
@@ -438,6 +611,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
+                      // Opening script
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -445,18 +619,58 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'Here is the exact script to use when speaking to the official. You can play the audio to hear it clearly.',
+                          viewModel.assistResponse!.conversationScript.opening,
                           style: Theme.of(
                             context,
                           ).textTheme.bodyLarge?.copyWith(height: 1.5),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      // Follow-up questions
+                      Text(
+                        'Follow-up questions:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...viewModel.assistResponse!.conversationScript.followUps
+                          .map(
+                            (q) => Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.arrow_right,
+                                    size: 20,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      q,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            // Play generated script
+                            viewModel.playResponse(
+                              viewModel.assistResponse!.conversationScript.opening,
+                              _currentLanguage,
+                            );
                           },
                           icon: const Icon(Icons.play_circle_filled, size: 24),
                           label: const Text(
@@ -481,6 +695,88 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              // Steps to follow
+              if (viewModel.checklistSteps != null &&
+                  viewModel.checklistSteps!.isNotEmpty)
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTheme.largePadding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.format_list_numbered,
+                                color: Colors.orange,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Steps to Follow',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        ...viewModel.checklistSteps!.asMap().entries.map(
+                              (entry) => Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 28,
+                                      height: 28,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.primaryColor
+                                            .withOpacity(0.1),
+                                        borderRadius:
+                                            BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        '${entry.key + 1}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.primaryColor,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        entry.value,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                      ],
+                    ),
+                  ),
+                ),
               const SizedBox(height: 24),
               // Action Buttons
               Row(

@@ -22,6 +22,7 @@ class OnboardingViewModel extends ChangeNotifier {
     'Assam',
     'Bihar',
     'Chhattisgarh',
+    'Delhi',
     'Goa',
     'Gujarat',
     'Haryana',
@@ -53,7 +54,8 @@ class OnboardingViewModel extends ChangeNotifier {
     'Assam': ['Kamrup', 'Nagaon', 'Barpeta', 'Sonitpur'],
     'Bihar': ['Patna', 'East Champaran', 'Muzaffarpur', 'Bhagalpur'],
     'Chhattisgarh': ['Raipur', 'Bilaspur', 'Durg', 'Rajnandgaon'],
-    // Add more districts as needed
+    'Delhi': ['Delhi'],
+    'Punjab': ['Chandigarh', 'Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala'],
   };
 
   void selectLanguage(String language) {

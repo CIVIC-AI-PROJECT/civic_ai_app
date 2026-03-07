@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:civic_ai_app/core/constants/app_constants.dart';
 
@@ -26,14 +29,58 @@ class ApiClient {
     required Map<String, dynamic> body,
     Map<String, String>? headers,
   }) async {
+    final url = '$baseUrl$endpoint';
+    debugPrint('[ApiClient] POST $url');
+    debugPrint('[ApiClient] Body: ${jsonEncode(body)}');
     try {
       final response = await httpClient
           .post(
-            Uri.parse('$baseUrl$endpoint'),
+            Uri.parse(url),
             headers: _buildHeaders(headers),
-            body: body,
+            body: jsonEncode(body),
           )
           .timeout(AppConstants.apiTimeout);
+
+      debugPrint('[ApiClient] Response ${response.statusCode}: ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}');
+      return _handleResponse(response);
+    } catch (e) {
+      debugPrint('[ApiClient] Error: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> postMultipart(
+    String endpoint, {
+    required File file,
+    required String fieldName,
+    Map<String, String>? fields,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl$endpoint'),
+      );
+
+      // Add headers
+      if (headers != null) {
+        request.headers.addAll(headers);
+      }
+
+      // Add file
+      request.files.add(
+        await http.MultipartFile.fromPath(fieldName, file.path),
+      );
+
+      // Add additional fields
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      final streamedResponse = await request.send().timeout(
+        AppConstants.apiTimeout,
+      );
+      final response = await http.Response.fromStream(streamedResponse);
 
       return _handleResponse(response);
     } catch (e) {
@@ -54,13 +101,22 @@ class ApiClient {
 
   dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return response.body;
+      if (response.body.isEmpty) {
+        return null;
+      }
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        return response.body;
+      }
     } else if (response.statusCode == 401) {
-      throw UnauthorizedException('Unauthorized');
+      throw UnauthorizedException('Unauthorized: ${response.body}');
     } else if (response.statusCode == 404) {
-      throw NotFoundException('Not found');
+      throw NotFoundException('Not found (404): ${response.body}');
+    } else if (response.statusCode == 403) {
+      throw ServerException('Forbidden (403): ${response.body}');
     } else {
-      throw ServerException('Server error: ${response.statusCode}');
+      throw ServerException('Server error ${response.statusCode}: ${response.body}');
     }
   }
 }
@@ -68,14 +124,20 @@ class ApiClient {
 class UnauthorizedException implements Exception {
   final String message;
   UnauthorizedException(this.message);
+  @override
+  String toString() => message;
 }
 
 class NotFoundException implements Exception {
   final String message;
   NotFoundException(this.message);
+  @override
+  String toString() => message;
 }
 
 class ServerException implements Exception {
   final String message;
   ServerException(this.message);
+  @override
+  String toString() => message;
 }
