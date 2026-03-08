@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:civic_ai_app/core/constants/app_constants.dart';
@@ -51,12 +53,38 @@ class ApiClient {
     }
   }
 
+  /// Upload file as multipart (works on native platforms)
+  /// For web compatibility, use postMultipartBytes instead
   Future<dynamic> postMultipart(
     String endpoint, {
     required File file,
     required String fieldName,
     Map<String, String>? fields,
     Map<String, String>? headers,
+  }) async {
+    try {
+      final bytes = await file.readAsBytes();
+      return postMultipartBytes(
+        endpoint,
+        bytes: bytes,
+        fieldName: fieldName,
+        fields: fields,
+        headers: headers,
+        fileName: file.path.split('/').last,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Upload multipart with bytes (works on web and native)
+  Future<dynamic> postMultipartBytes(
+    String endpoint, {
+    required Uint8List bytes,
+    required String fieldName,
+    Map<String, String>? fields,
+    Map<String, String>? headers,
+    String? fileName,
   }) async {
     try {
       final request = http.MultipartRequest(
@@ -69,9 +97,13 @@ class ApiClient {
         request.headers.addAll(headers);
       }
 
-      // Add file
+      // Add file as bytes (works on web and native)
       request.files.add(
-        await http.MultipartFile.fromPath(fieldName, file.path),
+        http.MultipartFile.fromBytes(
+          fieldName,
+          bytes,
+          filename: fileName ?? 'upload',
+        ),
       );
 
       // Add additional fields
