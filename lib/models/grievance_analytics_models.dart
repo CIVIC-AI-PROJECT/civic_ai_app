@@ -163,10 +163,8 @@ class IntelligenceDashboard {
       recentSpikes: spikes,
       clusterKeywords: Map<String, int>.from(
         (json['cluster_keywords'] ?? {}).map(
-          (key, value) => MapEntry(
-            key as String,
-            value is List ? value.length : 0,
-          ),
+          (key, value) =>
+              MapEntry(key as String, value is List ? value.length : 0),
         ),
       ),
     );

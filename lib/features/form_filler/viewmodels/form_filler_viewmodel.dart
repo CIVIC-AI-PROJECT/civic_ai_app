@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:civic_ai_app/core/services/form_processing_service.dart';
@@ -57,9 +56,9 @@ class FormFillerViewModel extends ChangeNotifier {
         }
 
         // Validate and process image
-        await validateDocumentQuality(image.path, documentType: documentType);
+        await validateDocumentQuality(image, documentType: documentType);
         if (processAfterValidation && _validationResult?.isValid == true) {
-          await _processImageWithVision(image.path, documentType);
+          await _processImageWithVision(image, documentType);
         }
       }
 
@@ -73,11 +72,10 @@ class FormFillerViewModel extends ChangeNotifier {
   }
 
   Future<void> _processImageWithVision(
-    String imagePath,
+    dynamic imageFile,
     String documentType,
   ) async {
     try {
-      final imageFile = File(imagePath);
       _extractedData = await _formService.extractForm(imageFile);
 
       if (_extractedData!.errorMessage != null) {
@@ -92,12 +90,11 @@ class FormFillerViewModel extends ChangeNotifier {
   }
 
   Future<void> validateDocumentQuality(
-    String imagePath, {
+    dynamic imageFile, {
     String? documentType,
   }) async {
     try {
       _lastValidatedDocumentType = documentType ?? _lastValidatedDocumentType;
-      final imageFile = File(imagePath);
       _validationResult = await _formService.validateImage(imageFile);
 
       if (!_validationResult!.isValid) {

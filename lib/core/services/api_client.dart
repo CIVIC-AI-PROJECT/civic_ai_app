@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -53,24 +52,36 @@ class ApiClient {
     }
   }
 
-  /// Upload file as multipart (works on native platforms)
-  /// For web compatibility, use postMultipartBytes instead
+  /// Upload file as multipart (works on web and native)
+  /// Automatically converts File to bytes for cross-platform compatibility
   Future<dynamic> postMultipart(
     String endpoint, {
-    required File file,
+    required dynamic file,
     required String fieldName,
     Map<String, String>? fields,
     Map<String, String>? headers,
   }) async {
     try {
-      final bytes = await file.readAsBytes();
+      final bytes = await file.readAsBytes() as Uint8List;
+      
+      // Try to extract filename, but use default on web
+      String? fileName;
+      try {
+        final path = file.path as String?;
+        if (path != null) {
+          fileName = path.split('/').last;
+        }
+      } catch (e) {
+        // file doesn't have path or path is not accessible
+      }
+      
       return postMultipartBytes(
         endpoint,
         bytes: bytes,
         fieldName: fieldName,
         fields: fields,
         headers: headers,
-        fileName: file.path.split('/').last,
+        fileName: fileName,
       );
     } catch (e) {
       rethrow;
