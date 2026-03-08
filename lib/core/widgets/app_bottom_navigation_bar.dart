@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:civic_ai_app/core/theme/app_theme.dart';
 
 class AppBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
@@ -21,129 +20,36 @@ class AppBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryColor.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(context, 0, Icons.home_outlined, Icons.home, 'Home'),
-          _buildNavItem(
-            context,
-            1,
-            Icons.fact_check_outlined,
-            Icons.fact_check,
-            'Action',
-          ),
-          _buildNavItem(
-            context,
-            2,
-            Icons.description_outlined,
-            Icons.description,
-            'Forms',
-          ),
-          _buildNavItem(
-            context,
-            3,
-            Icons.bar_chart_outlined,
-            Icons.bar_chart,
-            'Stats',
-          ),
-          _buildNavItem(
-            context,
-            4,
-            Icons.account_tree_outlined,
-            Icons.account_tree,
-            'Escalate',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-    BuildContext context,
-    int index,
-    IconData icon,
-    IconData selectedIcon,
-    String label,
-  ) {
-    final isSelected = currentIndex == index;
-
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _onTap(context, index),
-          borderRadius: BorderRadius.circular(16),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            decoration: BoxDecoration(
-              gradient: isSelected
-                  ? LinearGradient(
-                      colors: [
-                        AppTheme.primaryColor.withValues(alpha: 0.15),
-                        AppTheme.secondaryColor.withValues(alpha: 0.08),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : null,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedScale(
-                  scale: isSelected ? 1.1 : 1.0,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child: Icon(
-                    isSelected ? selectedIcon : icon,
-                    color: isSelected
-                        ? AppTheme.primaryColor
-                        : Colors.grey[600],
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  style: TextStyle(
-                    fontSize: isSelected ? 12 : 11,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected
-                        ? AppTheme.primaryColor
-                        : Colors.grey[600],
-                  ),
-                  child: Text(label),
-                ),
-              ],
-            ),
-          ),
+    return NavigationBar(
+      selectedIndex: currentIndex,
+      onDestinationSelected: (index) => _onTap(context, index),
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home),
+          label: 'Home',
         ),
-      ),
+        NavigationDestination(
+          icon: Icon(Icons.fact_check_outlined),
+          selectedIcon: Icon(Icons.fact_check),
+          label: 'Actions',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.description_outlined),
+          selectedIcon: Icon(Icons.description),
+          label: 'Forms',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.bar_chart_outlined),
+          selectedIcon: Icon(Icons.bar_chart),
+          label: 'Analytics',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.account_tree_outlined),
+          selectedIcon: Icon(Icons.account_tree),
+          label: 'Escalation',
+        ),
+      ],
     );
   }
 }

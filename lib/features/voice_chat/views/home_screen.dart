@@ -56,8 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('CIVIC.AI'), centerTitle: true),
-      extendBody: true,
+      appBar: AppBar(title: const Text('Report Your Issue')),
       body: Consumer<VoiceChatViewModel>(
         builder: (context, viewModel, _) {
           if (viewModel.isLoading) {
@@ -82,16 +81,16 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 24),
           Text(
             'Finding the best office for you...',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey[600],
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
           ),
           const SizedBox(height: 8),
           Text(
             'Analyzing your problem & checking nearby offices',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[500],
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
           ),
         ],
       ),
@@ -99,269 +98,274 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMainView(VoiceChatViewModel viewModel) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white,
-            Theme.of(context).colorScheme.primaryContainer.withOpacity(0.05),
-          ],
-        ),
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(
-            left: AppTheme.largePadding,
-            right: AppTheme.largePadding,
-            top: AppTheme.defaultPadding,
-            bottom: 100, // Extra padding for floating nav
-          ),
-          child: Column(
-            children: [
-              // Error display
-              if (viewModel.errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Card(
-                    color: Colors.red[50],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: Column(
+          children: [
+            // Error alert at top
+            if (viewModel.errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorRed.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppTheme.errorRed.withValues(alpha: 0.3),
                     ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: AppTheme.errorRed,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          viewModel.errorMessage!,
+                          style: const TextStyle(
+                            color: AppTheme.errorRed,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          size: 18,
+                          color: AppTheme.errorRed,
+                        ),
+                        onPressed: () => viewModel.clearError(),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            // Top info cards
+            Row(
+              children: [
+                Expanded(
+                  child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.error_outline, color: Colors.red),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              viewModel.errorMessage!,
-                              style: const TextStyle(color: Colors.red),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryTeal.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.gavel,
+                              size: 20,
+                              color: AppTheme.primaryTeal,
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.close, size: 18),
-                            onPressed: () => viewModel.clearError(),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Rights Guide',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Know your local civic rights.',
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-              const SizedBox(height: 32),
-              Text(
-                'What problem are you facing today?',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  height: 1.3,
-                ),
-              ),
-              const SizedBox(height: 48),
-              // Main Microphone Button with Gradient
-              GestureDetector(
-                onLongPress: () async {
-                  await viewModel.startRecording(
-                    languageCode: _currentLanguage,
-                    userId: 'current_user',
-                    city: _userCity,
-                  );
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: 180,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: viewModel.isRecording
-                          ? [Colors.red, Colors.deepOrange]
-                          : [AppTheme.primaryColor, AppTheme.secondaryColor],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryTeal.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.volume_up,
+                              size: 20,
+                              color: AppTheme.primaryTeal,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'What to Say',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Effective reporting tips.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: viewModel.isRecording
-                            ? Colors.red.withOpacity(0.4)
-                            : AppTheme.primaryColor.withOpacity(0.4),
-                        blurRadius: 24,
-                        spreadRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.1),
-                        blurRadius: 10,
-                        spreadRadius: -5,
-                        offset: const Offset(-2, -2),
-                      ),
-                    ],
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        viewModel.isRecording ? Icons.mic : Icons.mic_none,
-                        size: 80,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        viewModel.isRecording
-                            ? 'Listening...'
-                            : 'Hold to Speak',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            // Main mic button
+            Column(
+              children: [
+                GestureDetector(
+                  onLongPress: () async {
+                    await viewModel.startRecording(
+                      languageCode: _currentLanguage,
+                      userId: 'current_user',
+                      city: _userCity,
+                    );
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: viewModel.isRecording
+                          ? AppTheme.errorRed
+                          : AppTheme.primaryTeal,
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              (viewModel.isRecording
+                                      ? AppTheme.errorRed
+                                      : AppTheme.primaryTeal)
+                                  .withValues(alpha: 0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Long press the microphone',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-              ),
-              if (viewModel.isRecording)
-                Padding(
-                  padding: const EdgeInsets.only(top: 24),
-                  child: ElevatedButton.icon(
-                    onPressed: () async => await viewModel.stopRecording(),
-                    icon: const Icon(Icons.stop_circle_outlined, size: 24),
-                    label: const Text(
-                      'Stop Recording',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      ],
                     ),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          viewModel.isRecording ? Icons.mic : Icons.mic_none,
+                          size: 60,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          viewModel.isRecording
+                              ? 'Listening...'
+                              : 'Hold to Speak',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              const SizedBox(height: 32),
-              // OR Divider
-              Row(
-                children: [
-                  Expanded(child: Divider(color: Colors.grey[300])),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'OR type your problem',
-                      style: TextStyle(
-                        color: Colors.grey[500],
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
+                const SizedBox(height: 12),
+                Text(
+                  'Describe your civic issue',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                if (viewModel.isRecording) ...[
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async => await viewModel.stopRecording(),
+                      icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                      label: const Text('Stop Recording'),
                     ),
                   ),
-                  Expanded(child: Divider(color: Colors.grey[300])),
                 ],
-              ),
-              const SizedBox(height: 16),
-              // Text Input
-              TextField(
-                controller: _problemController,
-                maxLines: 3,
-                minLines: 2,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  hintText: 'e.g. I want to correct my birth certificate',
-                  hintStyle: TextStyle(color: Colors.grey[400]),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: AppTheme.primaryColor.withOpacity(0.3),
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Colors.grey[300]!,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppTheme.primaryColor,
-                      width: 2,
+              ],
+            ),
+            const SizedBox(height: 32),
+            // OR divider
+            Row(
+              children: [
+                Expanded(child: Divider(color: Colors.grey[300])),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(
+                    'OR TYPE',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primaryTeal,
                     ),
                   ),
                 ),
+                Expanded(child: Divider(color: Colors.grey[300])),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Text input
+            TextField(
+              controller: _problemController,
+              maxLines: 3,
+              minLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(hintText: 'Type your issue here...'),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _problemController.text.trim().isEmpty
+                    ? null
+                    : () async {
+                        FocusScope.of(context).unfocus();
+                        await viewModel.submitTextProblem(
+                          problem: _problemController.text.trim(),
+                          userId: 'current_user',
+                          city: _userCity,
+                        );
+                      },
+                icon: const Icon(Icons.send, size: 18),
+                label: const Text('Submit'),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _problemController.text.trim().isEmpty
-                      ? null
-                      : () async {
-                          FocusScope.of(context).unfocus();
-                          await viewModel.submitTextProblem(
-                            problem: _problemController.text.trim(),
-                            userId: 'current_user',
-                            city: _userCity,
-                          );
-                        },
-                  icon: const Icon(Icons.send, size: 20),
-                  label: const Text(
-                    'Submit',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+            ),
+            const SizedBox(height: 32),
+            // Quick categories
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'QUICK CATEGORIES',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.primaryTeal,
                 ),
               ),
-              const SizedBox(height: 32),
-              // Quick Category Buttons
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Quick Categories',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: AppConstants.quickCategories
-                    .map((category) => _buildQuickCard(category))
-                    .toList(),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: AppConstants.quickCategories
+                  .map((category) => _buildQuickCard(category))
+                  .toList(),
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -369,51 +373,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildQuickCard(String category) {
     final viewModel = context.read<VoiceChatViewModel>();
-    // Map display label to a descriptive problem sentence
     final Map<String, String> categoryProblems = {
       'Ration/PDS': 'I have a problem with my ration card or PDS services',
       'Pensions': 'I need help with my pension related issues',
       'Land Disputes': 'I have a land dispute that needs resolution',
       'FIR/Police': 'I need to file an FIR or have a police related issue',
     };
-    return Material(
-      elevation: 2,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: () {
-          final problem = categoryProblems[category] ?? category;
-          viewModel.submitTextProblem(
-            problem: problem,
-            userId: 'current_user',
-            city: _userCity,
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppTheme.primaryColor.withOpacity(0.08),
-                AppTheme.secondaryColor.withOpacity(0.05),
-              ],
-            ),
-            border: Border.all(
-              color: AppTheme.primaryColor.withOpacity(0.3),
-              width: 1.5,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            category,
-            style: const TextStyle(
-              color: AppTheme.primaryColor,
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-            ),
-          ),
-        ),
-      ),
+    return OutlinedButton(
+      onPressed: () {
+        final problem = categoryProblems[category] ?? category;
+        viewModel.submitTextProblem(
+          problem: problem,
+          userId: 'current_user',
+          city: _userCity,
+        );
+      },
+      child: Text(category),
     );
   }
 
@@ -425,7 +400,9 @@ class _HomeScreenState extends State<HomeScreen> {
           end: Alignment.bottomCenter,
           colors: [
             Colors.white,
-            Theme.of(context).colorScheme.primaryContainer.withOpacity(0.05),
+            Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withValues(alpha: 0.05),
           ],
         ),
       ),
@@ -456,12 +433,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withOpacity(0.1),
+                              color: AppTheme.primaryTeal.withValues(
+                                alpha: 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Icon(
                               Icons.record_voice_over,
-                              color: AppTheme.primaryColor,
+                              color: AppTheme.primaryTeal,
                               size: 24,
                             ),
                           ),
@@ -525,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 color: Theme.of(
                   context,
-                ).colorScheme.secondaryContainer.withOpacity(0.2),
+                ).colorScheme.secondaryContainer.withValues(alpha: 0.2),
                 child: Padding(
                   padding: const EdgeInsets.all(AppTheme.largePadding),
                   child: Column(
@@ -536,12 +515,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppTheme.secondaryColor.withOpacity(0.2),
+                              color: AppTheme.secondaryTeal.withValues(
+                                alpha: 0.2,
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Icon(
                               Icons.gavel,
-                              color: AppTheme.secondaryColor,
+                              color: AppTheme.secondaryTeal,
                               size: 24,
                             ),
                           ),
@@ -575,126 +556,140 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
               // What To Say Block
               if (viewModel.assistResponse != null)
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                color: Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withOpacity(0.3),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppTheme.largePadding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTheme.largePadding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryTeal.withValues(
+                                  alpha: 0.2,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.volume_up,
+                                color: AppTheme.primaryTeal,
+                                size: 24,
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.volume_up,
-                              color: AppTheme.primaryColor,
-                              size: 24,
+                            const SizedBox(width: 12),
+                            Text(
+                              'What to Say',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Opening script
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'What to Say',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
+                          child: Text(
+                            viewModel
+                                .assistResponse!
+                                .conversationScript
+                                .opening,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyLarge?.copyWith(height: 1.5),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Opening script
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
-                          viewModel.assistResponse!.conversationScript.opening,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyLarge?.copyWith(height: 1.5),
+                        const SizedBox(height: 12),
+                        // Follow-up questions
+                        Text(
+                          'Follow-up questions:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Follow-up questions
-                      Text(
-                        'Follow-up questions:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ...viewModel.assistResponse!.conversationScript.followUps
-                          .map(
-                            (q) => Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(
-                                    Icons.arrow_right,
-                                    size: 20,
-                                    color: AppTheme.primaryColor,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      q,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[800],
+                        const SizedBox(height: 8),
+                        ...viewModel
+                            .assistResponse!
+                            .conversationScript
+                            .followUps
+                            .map(
+                              (q) => Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.arrow_right,
+                                      size: 20,
+                                      color: AppTheme.primaryTeal,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        q,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[800],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              viewModel.playResponse(
+                                viewModel
+                                    .assistResponse!
+                                    .conversationScript
+                                    .opening,
+                                _currentLanguage,
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.play_circle_filled,
+                              size: 24,
+                            ),
+                            label: const Text(
+                              'Play Script',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: AppTheme.secondaryTeal,
+                              foregroundColor: Colors.white,
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                           ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            viewModel.playResponse(
-                              viewModel.assistResponse!.conversationScript.opening,
-                              _currentLanguage,
-                            );
-                          },
-                          icon: const Icon(Icons.play_circle_filled, size: 24),
-                          label: const Text(
-                            'Play Script',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: AppTheme.secondaryColor,
-                            foregroundColor: Colors.white,
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
               const SizedBox(height: 16),
               // Steps to follow
               if (viewModel.checklistSteps != null &&
@@ -714,7 +709,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.15),
+                                color: Colors.orange.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(
@@ -726,53 +721,51 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(width: 12),
                             Text(
                               'Steps to Follow',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
+                              style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
                         ...viewModel.checklistSteps!.asMap().entries.map(
-                              (entry) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 28,
-                                      height: 28,
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.primaryColor
-                                            .withOpacity(0.1),
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        '${entry.key + 1}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: AppTheme.primaryColor,
-                                          fontSize: 13,
-                                        ),
-                                      ),
+                          (entry) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryTeal.withValues(
+                                      alpha: 0.1,
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        entry.value,
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          height: 1.4,
-                                        ),
-                                      ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '${entry.key + 1}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryTeal,
+                                      fontSize: 13,
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    entry.value,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -796,7 +789,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: Colors.grey[400]!, width: 2),
+                        side: BorderSide(color: Colors.grey[300]!, width: 2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

@@ -22,7 +22,7 @@ class CommonWidgets {
           : Icon(icon ?? Icons.check),
       label: Text(isLoading ? 'Loading...' : label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? AppTheme.primaryColor,
+        backgroundColor: backgroundColor ?? AppTheme.primaryTeal,
         foregroundColor: textColor ?? Colors.white,
       ),
     );
@@ -58,7 +58,7 @@ class CommonWidgets {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: color ?? AppTheme.primaryColor),
+          CircularProgressIndicator(color: color ?? AppTheme.primaryTeal),
           if (message != null) ...[
             const SizedBox(height: AppTheme.defaultPadding),
             Text(message),

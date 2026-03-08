@@ -14,6 +14,7 @@ class FormFillerViewModel extends ChangeNotifier {
   bool _isProcessing = false;
   FormExtractResponse? _extractedData;
   ImageValidationResponse? _validationResult;
+  String? _lastValidatedDocumentType;
   String? _errorMessage;
 
   String? get aadharPath => _aadharPath;
@@ -22,6 +23,7 @@ class FormFillerViewModel extends ChangeNotifier {
   bool get isProcessing => _isProcessing;
   FormExtractResponse? get extractedData => _extractedData;
   ImageValidationResponse? get validationResult => _validationResult;
+  String? get lastValidatedDocumentType => _lastValidatedDocumentType;
   String? get errorMessage => _errorMessage;
 
   FormFillerViewModel({FormProcessingService? formService})
@@ -55,7 +57,7 @@ class FormFillerViewModel extends ChangeNotifier {
         }
 
         // Validate and process image
-        await validateDocumentQuality(image.path);
+        await validateDocumentQuality(image.path, documentType: documentType);
         if (processAfterValidation && _validationResult?.isValid == true) {
           await _processImageWithVision(image.path, documentType);
         }
@@ -89,8 +91,12 @@ class FormFillerViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> validateDocumentQuality(String imagePath) async {
+  Future<void> validateDocumentQuality(
+    String imagePath, {
+    String? documentType,
+  }) async {
     try {
+      _lastValidatedDocumentType = documentType ?? _lastValidatedDocumentType;
       final imageFile = File(imagePath);
       _validationResult = await _formService.validateImage(imageFile);
 
@@ -138,6 +144,7 @@ class FormFillerViewModel extends ChangeNotifier {
     _isProcessing = false;
     _extractedData = null;
     _validationResult = null;
+    _lastValidatedDocumentType = null;
     _errorMessage = null;
     notifyListeners();
   }

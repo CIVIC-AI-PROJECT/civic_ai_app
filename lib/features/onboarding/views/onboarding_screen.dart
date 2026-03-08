@@ -23,7 +23,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             end: Alignment.bottomRight,
             colors: [
               Theme.of(context).colorScheme.surface,
-              Theme.of(context).colorScheme.primaryContainer.withOpacity(0.1),
+              Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.1),
             ],
           ),
         ),
@@ -43,11 +43,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.primaryTeal,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primaryColor.withOpacity(0.3),
+                              color: AppTheme.primaryTeal.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -100,12 +100,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               color: _currentStep >= index
-                  ? AppTheme.primaryColor
+                  ? AppTheme.primaryTeal
                   : Colors.grey[300],
               boxShadow: _currentStep >= index
                   ? [
                       BoxShadow(
-                        color: AppTheme.primaryColor.withOpacity(0.3),
+                        color: AppTheme.primaryTeal.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -144,12 +144,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: AppTheme.primaryTeal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.language,
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.primaryTeal,
                     size: 28,
                   ),
                 ),
@@ -222,13 +222,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               gradient: isSelected
                   ? LinearGradient(
                       colors: [
-                        AppTheme.primaryColor,
-                        AppTheme.primaryColor.withOpacity(0.8),
+                        AppTheme.primaryTeal,
+                        AppTheme.primaryTeal.withValues(alpha: 0.8),
                       ],
                     )
                   : null,
               border: Border.all(
-                color: isSelected ? AppTheme.primaryColor : Colors.grey[300]!,
+                color: isSelected ? AppTheme.primaryTeal : Colors.grey[300]!,
                 width: isSelected ? 0 : 1.5,
               ),
               borderRadius: BorderRadius.circular(12),
@@ -263,12 +263,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: AppTheme.primaryTeal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.person,
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.primaryTeal,
                     size: 28,
                   ),
                 ),
@@ -311,14 +311,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               gradient: viewModel.selectedPersona == persona
                                   ? LinearGradient(
                                       colors: [
-                                        AppTheme.primaryColor,
-                                        AppTheme.primaryColor.withOpacity(0.8),
+                                        AppTheme.primaryTeal,
+                                        AppTheme.primaryTeal.withValues(alpha: 0.8),
                                       ],
                                     )
                                   : null,
                               border: Border.all(
                                 color: viewModel.selectedPersona == persona
-                                    ? AppTheme.primaryColor
+                                    ? AppTheme.primaryTeal
                                     : Colors.grey[300]!,
                                 width: viewModel.selectedPersona == persona
                                     ? 0
@@ -382,12 +382,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: AppTheme.primaryTeal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.location_on,
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.primaryTeal,
                     size: 28,
                   ),
                 ),
@@ -446,7 +446,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.primaryTeal,
                     width: 2,
                   ),
                 ),
@@ -493,7 +493,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: AppTheme.primaryColor,
+                      color: AppTheme.primaryTeal,
                       width: 2,
                     ),
                   ),
@@ -567,7 +567,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 elevation: canProceed ? 4 : 0,
                 backgroundColor: canProceed
-                    ? AppTheme.primaryColor
+                    ? AppTheme.primaryTeal
                     : Colors.grey[300],
                 foregroundColor: canProceed ? Colors.white : Colors.grey[500],
                 shape: RoundedRectangleBorder(

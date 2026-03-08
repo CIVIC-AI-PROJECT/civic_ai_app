@@ -76,7 +76,7 @@ class ImageValidationResponse {
     return normalized;
   }
 
-  List<String> get issues => isBlurry ? ['Image is blurry'] : const [];
+  List<String> get issues => isBlurry ? ['Image is blurry & not in defined borders'] : const [];
 
   ImageValidationResponse({
     required this.isBlurry,

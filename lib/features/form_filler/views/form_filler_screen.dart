@@ -87,12 +87,12 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppTheme.secondaryColor.withValues(alpha: 0.2),
+                        color: AppTheme.secondaryTeal.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         Icons.info,
-                        color: AppTheme.secondaryColor,
+                        color: AppTheme.secondaryTeal,
                         size: 24,
                       ),
                     ),
@@ -153,14 +153,14 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppTheme.secondaryColor.withValues(
+                              color: AppTheme.secondaryTeal.withValues(
                                 alpha: 0.2,
                               ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
                               Icons.check_circle,
-                              color: AppTheme.secondaryColor,
+                              color: AppTheme.secondaryTeal,
                               size: 24,
                             ),
                           ),
@@ -344,12 +344,12 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppTheme.secondaryColor.withValues(alpha: 0.2),
+                        color: AppTheme.secondaryTeal.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         Icons.verified,
-                        color: AppTheme.secondaryColor,
+                        color: AppTheme.secondaryTeal,
                         size: 24,
                       ),
                     ),
@@ -417,9 +417,9 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            viewModel.validationResult!.isValid
-                                ? 'Image quality is valid'
-                                : 'Image quality needs improvement',
+                            viewModel.validationResult!.isBlurry
+                                ? 'Image is blurry'
+                                : 'Image is not blurry',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -434,6 +434,18 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                           color: viewModel.validationResult!.quality >= 0.75
                               ? Colors.green
                               : Colors.orange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        viewModel.validationResult!.isBlurry
+                            ? 'Please retake the picture with better focus and framing.'
+                            : 'The image passed blur detection and is ready to use.',
+                        style: TextStyle(
+                          color: viewModel.validationResult!.isBlurry
+                              ? Colors.orange[800]
+                              : Colors.green[700],
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -457,6 +469,28 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(child: Text(issue)),
                               ],
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (viewModel.validationResult!.isBlurry) ...[
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              final documentType =
+                                  viewModel.lastValidatedDocumentType ?? 'other';
+                              viewModel.captureDocument(
+                                documentType: documentType,
+                                processAfterValidation: false,
+                              );
+                            },
+                            icon: const Icon(Icons.camera_alt),
+                            label: const Text('Retake Picture'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              foregroundColor: Colors.white,
                             ),
                           ),
                         ),
@@ -527,7 +561,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    color: AppTheme.primaryTeal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -536,7 +570,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                         : docType == 'ratiocard'
                         ? Icons.description
                         : Icons.insert_drive_file,
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.primaryTeal,
                     size: 24,
                   ),
                 ),
@@ -588,7 +622,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                 width: double.infinity,
                 height: 200,
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppTheme.primaryColor, width: 2),
+                  border: Border.all(color: AppTheme.primaryTeal, width: 2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ClipRRect(
@@ -596,7 +630,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                   child: const Icon(
                     Icons.check_circle,
                     size: 80,
-                    color: AppTheme.secondaryColor,
+                    color: AppTheme.secondaryTeal,
                   ),
                 ),
               ),
@@ -630,8 +664,10 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () =>
-                          viewModel.validateDocumentQuality(imagePath),
+                      onPressed: () => viewModel.validateDocumentQuality(
+                        imagePath,
+                        documentType: docType,
+                      ),
                       icon: const Icon(Icons.check, size: 22),
                       label: const Text(
                         'Verify',
@@ -642,7 +678,7 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                       ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: AppTheme.secondaryColor,
+                        backgroundColor: AppTheme.secondaryTeal,
                         foregroundColor: Colors.white,
                         elevation: 2,
                         shape: RoundedRectangleBorder(

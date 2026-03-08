@@ -16,121 +16,110 @@ class _EscalationPlaybookScreenState extends State<EscalationPlaybookScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Escalation Steps'), elevation: 0),
-      extendBody: true,
+      backgroundColor: const Color(0xFFF4F6F8),
+      appBar: AppBar(
+        title: const Text('Escalation Playbook'),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.maybePop(context),
+          icon: const Icon(Icons.arrow_back),
+        ),
+        actions: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert)),
+        ],
+      ),
       body: Consumer<EscalationPlaybookViewModel>(
         builder: (context, viewModel, _) {
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer.withOpacity(0.05),
-                  Colors.white,
-                ],
-              ),
-            ),
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: AppTheme.largePadding,
-                  right: AppTheme.largePadding,
-                  top: AppTheme.largePadding,
-                  bottom: 100, // Extra padding for floating nav
-                ),
-                child: Column(
-                  children: [
-                    // Progress Bar
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+          if (viewModel.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final completedCount = viewModel.steps
+              .where((step) => step.isCompleted)
+              .length;
+          final int activeStepNumber = viewModel.currentStep > 0
+              ? viewModel.currentStep
+              : (completedCount + 1).clamp(1, viewModel.steps.length);
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ACTIVE CASE #8241',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppTheme.primaryTeal,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Step $activeStepNumber of ${viewModel.steps.length}',
+                        style: Theme.of(context).textTheme.displayMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.darkText,
+                            ),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppTheme.largePadding),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Your Progress',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor.withOpacity(
-                                      0.1,
-                                    ),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    '${viewModel.getProgressPercentage().toStringAsFixed(0)}%',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                          color: AppTheme.primaryColor,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: LinearProgressIndicator(
-                                value: viewModel.getProgressPercentage() / 100,
-                                minHeight: 12,
-                                backgroundColor: Colors.grey[200],
-                                valueColor: AlwaysStoppedAnimation(
-                                  AppTheme.primaryColor,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${viewModel.steps.where((s) => s.isCompleted).length} of ${viewModel.steps.length} steps completed',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
+                      Text(
+                        '${viewModel.getProgressPercentage().toStringAsFixed(0)}% Complete',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: viewModel.getProgressPercentage() / 100,
+                      minHeight: 16,
+                      backgroundColor: const Color(0xFFD6E2E5),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppTheme.primaryTeal,
+                      ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Timeline of Steps
-                    Column(
-                      children: viewModel.steps
-                          .asMap()
-                          .entries
-                          .map(
-                            (entry) => _buildStepCard(
-                              context,
-                              entry.value,
-                              entry.key,
-                              viewModel,
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 18),
+                  Stack(
+                    children: [
+                      Positioned(
+                        left: 16,
+                        top: 8,
+                        bottom: 8,
+                        child: Container(
+                          width: 2,
+                          color: const Color(0xFFCFE0DD),
+                        ),
+                      ),
+                      Column(
+                        children: viewModel.steps
+                            .asMap()
+                            .entries
+                            .map(
+                              (entry) => _buildTimelineStep(
+                                context,
+                                entry.value,
+                                entry.key,
+                                viewModel,
+                                activeStepNumber,
+                                entry.key == viewModel.steps.length - 1,
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           );
@@ -140,312 +129,231 @@ class _EscalationPlaybookScreenState extends State<EscalationPlaybookScreen> {
     );
   }
 
-  Widget _buildStepCard(
+  Widget _buildTimelineStep(
     BuildContext context,
     EscalationStep step,
     int index,
     EscalationPlaybookViewModel viewModel,
+    int activeStepNumber,
+    bool isLast,
   ) {
     final isCompleted = step.isCompleted;
-    final isSelected =
-        step.stepNumber ==
-        (viewModel.currentStep > 0 ? viewModel.currentStep : 1);
+    final isActive = step.stepNumber == activeStepNumber;
+    final isPending = !isCompleted && !isActive;
+    final iconColor = isCompleted || isActive
+        ? AppTheme.primaryTeal
+        : const Color(0xFF94A3B8);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: GestureDetector(
-        onTap: () => viewModel.moveToStep(step.stepNumber),
-        child: Card(
-          elevation: isSelected ? 6 : 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: isSelected
-                ? BorderSide(color: AppTheme.primaryColor, width: 2)
-                : BorderSide.none,
-          ),
-          color: isCompleted
-              ? Theme.of(
-                  context,
-                ).colorScheme.secondaryContainer.withOpacity(0.2)
-              : isSelected
-              ? AppTheme.primaryColor.withOpacity(0.05)
-              : Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.largePadding),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 32,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isCompleted
-                                  ? AppTheme.secondaryColor.withOpacity(0.15)
-                                  : AppTheme.primaryColor.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'Step ${step.stepNumber}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: isCompleted
-                                    ? AppTheme.secondaryColor
-                                    : AppTheme.primaryColor,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            step.title,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    if (isCompleted)
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppTheme.secondaryColor.withOpacity(0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check_circle,
-                          color: AppTheme.secondaryColor,
-                          size: 32,
-                        ),
-                      )
-                    else if (isSelected)
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppTheme.primaryColor,
-                            width: 3,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            step.stepNumber.toString(),
-                            style: const TextStyle(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey[200],
-                        ),
-                        child: Center(
-                          child: Text(
-                            step.stepNumber.toString(),
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w600,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                if (isSelected || isCompleted) ...[
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Description',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryColor,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          step.description,
-                          style: const TextStyle(height: 1.5),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Action',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryColor,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(step.action, style: const TextStyle(height: 1.5)),
-                        if (step.contactNumber != null ||
-                            step.contactLink != null) ...[
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              if (step.contactNumber != null)
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => viewModel
-                                        .callContactNumber(step.contactNumber!),
-                                    icon: const Icon(Icons.call, size: 22),
-                                    label: const Text(
-                                      'Call',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 14,
-                                      ),
-                                      backgroundColor: AppTheme.secondaryColor,
-                                      foregroundColor: Colors.white,
-                                      elevation: 2,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (step.contactLink != null) ...[
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => viewModel.openContactLink(
-                                      step.contactLink!,
-                                    ),
-                                    icon: const Icon(
-                                      Icons.open_in_browser,
-                                      size: 22,
-                                    ),
-                                    label: const Text(
-                                      'Portal',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 14,
-                                      ),
-                                      elevation: 2,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                        if (!isCompleted)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: () => viewModel.markStepAsCompleted(
-                                  step.stepNumber,
-                                ),
-                                icon: const Icon(
-                                  Icons.check_circle_outline,
-                                  size: 24,
-                                ),
-                                label: const Text(
-                                  'Mark as Complete',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  backgroundColor: AppTheme.secondaryColor,
-                                  foregroundColor: Colors.white,
-                                  elevation: 4,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isActive
+                        ? AppTheme.primaryTeal.withValues(alpha: 0.18)
+                        : isCompleted
+                        ? AppTheme.primaryTeal
+                        : const Color(0xFFE2E8F0),
+                    border: isActive
+                        ? Border.all(color: AppTheme.primaryTeal, width: 2)
+                        : null,
                   ),
-                ],
-                // Timeline connector
-                if (index < viewModel.steps.length - 1)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 24, top: 16),
-                    child: SizedBox(
-                      height: 24,
-                      child: CustomPaint(
-                        painter: TimelineConnectorPainter(
-                          color: isCompleted
-                              ? AppTheme.secondaryColor
-                              : Colors.grey[300]!,
-                        ),
-                      ),
-                    ),
+                  child: Icon(
+                    isCompleted
+                        ? Icons.check
+                        : isActive
+                        ? Icons.more_horiz
+                        : index == viewModel.steps.length - 1
+                        ? Icons.flag_outlined
+                        : Icons.access_time,
+                    color: isCompleted || isActive
+                        ? Colors.white
+                        : const Color(0xFF94A3B8),
+                    size: 18,
+                  ),
+                ),
+                if (!isLast)
+                  Container(
+                    width: 2,
+                    height: isActive ? 180 : 110,
+                    color: isCompleted || isActive
+                        ? AppTheme.primaryTeal
+                        : const Color(0xFFD9E3E6),
                   ),
               ],
             ),
           ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => viewModel.moveToStep(step.stepNumber),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isActive ? AppTheme.primaryTeal : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isPending
+                        ? const Color(0xFFDCE5EA)
+                        : isCompleted
+                        ? const Color(0xFFD0DEE2)
+                        : AppTheme.primaryTeal,
+                  ),
+                  boxShadow: isActive
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _stepIcon(step.stepNumber),
+                          color: isActive ? Colors.white : iconColor,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            step.title,
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  color: isActive
+                                      ? Colors.white
+                                      : AppTheme.darkText,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      step.description,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: isActive
+                            ? Colors.white.withValues(alpha: 0.92)
+                            : const Color(0xFF334155),
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    if (isCompleted)
+                      Text(
+                        'Completed',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.primaryTeal,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    else if (isPending)
+                      Text(
+                        'Pending completion of current step…',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFF6B7280),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    if (isActive) ...[
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () => viewModel.markStepAsCompleted(
+                                step.stepNumber,
+                              ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: AppTheme.primaryTeal,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                              ),
+                              child: const Text('Mark Complete'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          if (step.contactNumber != null)
+                            _circleAction(
+                              icon: Icons.call,
+                              onTap: () => viewModel.callContactNumber(
+                                step.contactNumber!,
+                              ),
+                            )
+                          else if (step.contactLink != null)
+                            _circleAction(
+                              icon: Icons.open_in_new,
+                              onTap: () =>
+                                  viewModel.openContactLink(step.contactLink!),
+                            )
+                          else
+                            _circleAction(
+                              icon: Icons.info_outline,
+                              onTap: () {},
+                            ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
-class TimelineConnectorPainter extends CustomPainter {
-  final Color color;
-
-  TimelineConnectorPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = color
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(Offset(0, 0), Offset(0, size.height), paint);
+  Widget _circleAction({required IconData icon, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Ink(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.95),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+        ),
+        child: Icon(icon, color: AppTheme.primaryTeal),
+      ),
+    );
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  IconData _stepIcon(int stepNumber) {
+    switch (stepNumber) {
+      case 1:
+        return Icons.warning_amber_rounded;
+      case 2:
+        return Icons.bar_chart;
+      case 3:
+        return Icons.gavel;
+      case 4:
+        return Icons.description_outlined;
+      default:
+        return Icons.check_circle_outline;
+    }
+  }
+
 }
