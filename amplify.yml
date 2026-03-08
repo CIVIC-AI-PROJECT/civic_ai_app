@@ -3,16 +3,15 @@ frontend:
   phases:
     preBuild:
       commands:
-        - git clone https://github.com/flutter/flutter.git --depth 1 -b stable || true
-        - export PATH="$PATH:$(pwd)/flutter/bin"
-        - ./flutter/bin/flutter doctor
-        - ./flutter/bin/flutter config --enable-web
-        - ./flutter/bin/flutter pub get
+        - rm -rf flutter
+        - git clone https://github.com/flutter/flutter.git --depth 1 -b stable
+        - flutter/bin/flutter doctor
+        - flutter/bin/flutter config --enable-web
+        - flutter/bin/flutter pub get
 
     build:
       commands:
-        - export PATH="$PATH:$(pwd)/flutter/bin"
-        - ./flutter/bin/flutter build web --release
+        - flutter/bin/flutter build web --release
 
   artifacts:
     baseDirectory: build/web
@@ -21,5 +20,4 @@ frontend:
 
   cache:
     paths:
-      - flutter
       - ~/.pub-cache

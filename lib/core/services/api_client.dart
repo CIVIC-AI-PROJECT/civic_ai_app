@@ -10,26 +10,12 @@ class ApiClient {
 
   ApiClient({http.Client? httpClient, String? baseUrl})
     : httpClient = httpClient ?? http.Client(),
-      baseUrl = _normalizeBaseUrl(baseUrl ?? AppConstants.baseUrl);
-
-  static String _normalizeBaseUrl(String value) {
-    if (value.endsWith('/')) {
-      return value.substring(0, value.length - 1);
-    }
-    return value;
-  }
-
-  String _buildUrl(String endpoint) {
-    if (endpoint.startsWith('/')) {
-      return '$baseUrl$endpoint';
-    }
-    return '$baseUrl/$endpoint';
-  }
+      baseUrl = baseUrl ?? AppConstants.baseUrl;
 
   Future<dynamic> get(String endpoint, {Map<String, String>? headers}) async {
     try {
       final response = await httpClient
-          .get(Uri.parse(_buildUrl(endpoint)), headers: _buildHeaders(headers))
+          .get(Uri.parse('$baseUrl$endpoint'), headers: _buildHeaders(headers))
           .timeout(AppConstants.apiTimeout);
 
       return _handleResponse(response);
@@ -43,7 +29,7 @@ class ApiClient {
     required Map<String, dynamic> body,
     Map<String, String>? headers,
   }) async {
-    final url = _buildUrl(endpoint);
+    final url = '$baseUrl$endpoint';
     debugPrint('[ApiClient] POST $url');
     debugPrint('[ApiClient] Body: ${jsonEncode(body)}');
     try {
@@ -75,7 +61,7 @@ class ApiClient {
     try {
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse(_buildUrl(endpoint)),
+        Uri.parse('$baseUrl$endpoint'),
       );
 
       // Add headers
