@@ -103,9 +103,9 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                 Center(
                   child: Text(
                     'Finalize your documents and get a printable checklist.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: const Color(0xFF8AA0B3)),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF8AA0B3),
+                    ),
                   ),
                 ),
               ],
@@ -157,7 +157,9 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
               value: readiness / 100,
               minHeight: 10,
               backgroundColor: const Color(0xFFBFDCDC),
-              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryTeal),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppTheme.primaryTeal,
+              ),
             ),
           ),
         ],
@@ -230,9 +232,9 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: const Color(0xFF506480)),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: const Color(0xFF506480),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -310,8 +312,12 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                verified ? Icons.fact_check_rounded : Icons.description_outlined,
-                color: verified ? AppTheme.primaryTeal : const Color(0xFF94A3B8),
+                verified
+                    ? Icons.fact_check_rounded
+                    : Icons.description_outlined,
+                color: verified
+                    ? AppTheme.primaryTeal
+                    : const Color(0xFF94A3B8),
                 size: 26,
               ),
               const SizedBox(height: 10),
@@ -320,13 +326,16 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: verified
                       ? const Color(0xFFDDF3EE)
@@ -375,7 +384,11 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
         ),
         child: Column(
           children: [
-            const Icon(Icons.location_off_outlined, size: 36, color: Color(0xFF94A3B8)),
+            const Icon(
+              Icons.location_off_outlined,
+              size: 36,
+              color: Color(0xFF94A3B8),
+            ),
             const SizedBox(height: 12),
             Text(
               'No office recommendation yet',
@@ -426,7 +439,11 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                     ),
                   ),
                   const Center(
-                    child: Icon(Icons.map_rounded, size: 52, color: Colors.white),
+                    child: Icon(
+                      Icons.map_rounded,
+                      size: 52,
+                      color: Colors.white,
+                    ),
                   ),
                   const Positioned(
                     left: 16,
@@ -453,9 +470,8 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                     Expanded(
                       child: Text(
                         office.name,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
                     Container(
@@ -469,7 +485,11 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.near_me, color: Colors.white, size: 14),
+                          const Icon(
+                            Icons.near_me,
+                            color: Colors.white,
+                            size: 14,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             '${office.distanceKm.toStringAsFixed(1)} mi',
@@ -486,9 +506,9 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
                 const SizedBox(height: 4),
                 Text(
                   office.address,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: const Color(0xFF556987)),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: const Color(0xFF556987),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Row(
@@ -578,7 +598,9 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
           backgroundColor: AppTheme.primaryTeal,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
         ),
       ),
     );
@@ -600,9 +622,9 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.errorRed,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.errorRed),
             ),
           ),
         ],
@@ -647,7 +669,9 @@ class _ActionCenterScreenState extends State<ActionCenterScreen> {
     final hasOffice = viewModel.recommendedOffice != null ? 1.0 : 0.0;
     final hasDocs = viewModel.documentStatus.isNotEmpty ? 1.0 : 0.3;
     final hasChecklist =
-        (viewModel.assistResponse?.checklist.steps.isNotEmpty ?? false) ? 1.0 : 0.4;
+        (viewModel.assistResponse?.checklist.steps.isNotEmpty ?? false)
+        ? 1.0
+        : 0.4;
     final readiness = ((hasOffice + hasDocs + hasChecklist) / 3) * 100;
     return readiness.clamp(20, 95);
   }

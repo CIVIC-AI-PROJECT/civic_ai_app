@@ -480,7 +480,8 @@ class _FormFillerScreenState extends State<FormFillerScreen> {
                           child: ElevatedButton.icon(
                             onPressed: () {
                               final documentType =
-                                  viewModel.lastValidatedDocumentType ?? 'other';
+                                  viewModel.lastValidatedDocumentType ??
+                                  'other';
                               viewModel.captureDocument(
                                 documentType: documentType,
                                 processAfterValidation: false,

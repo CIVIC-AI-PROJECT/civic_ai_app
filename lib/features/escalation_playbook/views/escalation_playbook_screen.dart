@@ -355,5 +355,4 @@ class _EscalationPlaybookScreenState extends State<EscalationPlaybookScreen> {
         return Icons.check_circle_outline;
     }
   }
-
 }
