@@ -4,10 +4,15 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API
-  static const String civicAssistBaseUrl =
-      'https://nd4g3lhgw1.execute-api.ap-south-1.amazonaws.com/prod';
-  static const String analyticsBaseUrl =
-      'http://civic-ai-alb-2138467908.ap-south-1.elb.amazonaws.com';
+  static const String civicAssistBaseUrl = String.fromEnvironment(
+    'CIVIC_ASSIST_BASE_URL',
+    defaultValue:
+        'https://nd4g3lhgw1.execute-api.ap-south-1.amazonaws.com/prod',
+  );
+  static const String analyticsBaseUrl = String.fromEnvironment(
+    'ANALYTICS_BASE_URL',
+    defaultValue: 'http://civic-ai-alb-2138467908.ap-south-1.elb.amazonaws.com',
+  );
   static const String baseUrl = civicAssistBaseUrl; // Default to civic assist
   static const Duration apiTimeout = Duration(seconds: 30);
 

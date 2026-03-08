@@ -10,12 +10,26 @@ class ApiClient {
 
   ApiClient({http.Client? httpClient, String? baseUrl})
     : httpClient = httpClient ?? http.Client(),
-      baseUrl = baseUrl ?? AppConstants.baseUrl;
+      baseUrl = _normalizeBaseUrl(baseUrl ?? AppConstants.baseUrl);
+
+  static String _normalizeBaseUrl(String value) {
+    if (value.endsWith('/')) {
+      return value.substring(0, value.length - 1);
+    }
+    return value;
+  }
+
+  String _buildUrl(String endpoint) {
+    if (endpoint.startsWith('/')) {
+      return '$baseUrl$endpoint';
+    }
+    return '$baseUrl/$endpoint';
+  }
 
   Future<dynamic> get(String endpoint, {Map<String, String>? headers}) async {
     try {
       final response = await httpClient
-          .get(Uri.parse('$baseUrl$endpoint'), headers: _buildHeaders(headers))
+          .get(Uri.parse(_buildUrl(endpoint)), headers: _buildHeaders(headers))
           .timeout(AppConstants.apiTimeout);
 
       return _handleResponse(response);
@@ -29,7 +43,7 @@ class ApiClient {
     required Map<String, dynamic> body,
     Map<String, String>? headers,
   }) async {
-    final url = '$baseUrl$endpoint';
+    final url = _buildUrl(endpoint);
     debugPrint('[ApiClient] POST $url');
     debugPrint('[ApiClient] Body: ${jsonEncode(body)}');
     try {
@@ -41,7 +55,9 @@ class ApiClient {
           )
           .timeout(AppConstants.apiTimeout);
 
-      debugPrint('[ApiClient] Response ${response.statusCode}: ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}');
+      debugPrint(
+        '[ApiClient] Response ${response.statusCode}: ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}',
+      );
       return _handleResponse(response);
     } catch (e) {
       debugPrint('[ApiClient] Error: $e');
@@ -59,7 +75,7 @@ class ApiClient {
     try {
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl$endpoint'),
+        Uri.parse(_buildUrl(endpoint)),
       );
 
       // Add headers
@@ -116,7 +132,9 @@ class ApiClient {
     } else if (response.statusCode == 403) {
       throw ServerException('Forbidden (403): ${response.body}');
     } else {
-      throw ServerException('Server error ${response.statusCode}: ${response.body}');
+      throw ServerException(
+        'Server error ${response.statusCode}: ${response.body}',
+      );
     }
   }
 }
