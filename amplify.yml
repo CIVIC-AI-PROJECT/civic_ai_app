@@ -3,14 +3,16 @@ frontend:
   phases:
     preBuild:
       commands:
-        - if [ ! -d "flutter" ]; then git clone https://github.com/flutter/flutter.git --depth 1 -b stable; fi
-        - export PATH="$PATH:`pwd`/flutter/bin"
-        - flutter doctor
-        - flutter pub get
+        - git clone https://github.com/flutter/flutter.git --depth 1 -b stable || true
+        - export PATH="$PATH:$(pwd)/flutter/bin"
+        - ./flutter/bin/flutter doctor
+        - ./flutter/bin/flutter config --enable-web
+        - ./flutter/bin/flutter pub get
 
     build:
       commands:
-        - flutter build web
+        - export PATH="$PATH:$(pwd)/flutter/bin"
+        - ./flutter/bin/flutter build web --release
 
   artifacts:
     baseDirectory: build/web
