@@ -63,7 +63,7 @@ class ApiClient {
   }) async {
     try {
       final bytes = await file.readAsBytes() as Uint8List;
-      
+
       // Try to extract filename, but use default on web
       String? fileName;
       try {
@@ -74,7 +74,7 @@ class ApiClient {
       } catch (e) {
         // file doesn't have path or path is not accessible
       }
-      
+
       return postMultipartBytes(
         endpoint,
         bytes: bytes,
